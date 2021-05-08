@@ -39,10 +39,9 @@ transfer:
       --entrypoint '' -v /var/run/docker.sock:/var/run/docker.sock
       --mount source=singularity,target=/root/.singularity
       quay.io/singularity/singularity:v${SINGULARITY_VERSION}-slim sh -c
-      'singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${LAUNCH_IMAGE_NAME}" &&
+      'singularity build /tmp/container/container.simg "docker://ci.atalaya.at/${LAUNCH_IMAGE_NAME}" &&
       apk add rsync openssh-client &&
       rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key"
-      --link-dest=${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_LAST_CONTAINER}/
       /tmp/container/
       ${LAUNCH_DESTINATION}:"${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/"'
     - time ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION} mkdir -p ${JOB_WORKDIR}/
