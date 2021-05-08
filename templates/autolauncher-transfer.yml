@@ -12,24 +12,6 @@ variables:
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     JOB_WORKDIR: ${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
 
-incremental_copy:
-  ### Doesn't really save any time, use not recommended
-  image: docker:stable
-  stage: pre-transfer
-  script:
-    - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
-    - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
-    - time apk add openssh-client
-    - mkdir -p ~/.ssh/
-    - cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
-    - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
-    - chmod 0600 /root/.ssh/ssh-key
-    - export LAUNCH_LAST_CONTAINER=$(ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}
-      ls -tr ${LAUNCH_TARGET_FOLDER}/containers/ | head -n 1)
-    - time ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}
-      cp -al ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_LAST_CONTAINER}
-      ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}
-
 transfer:
   image: docker:stable
   stage: transfer
