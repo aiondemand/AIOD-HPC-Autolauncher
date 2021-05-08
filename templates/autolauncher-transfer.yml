@@ -14,7 +14,7 @@ variables:
 
 incremental_copy:
   image: docker:stable
-  stage: transfer
+  stage: pre-transfer
   script:
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
@@ -30,8 +30,6 @@ incremental_copy:
 transfer:
   image: docker:stable
   stage: transfer
-  needs:
-    - incremental_copy
   script:
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
