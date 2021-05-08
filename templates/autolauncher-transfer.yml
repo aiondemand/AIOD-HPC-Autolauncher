@@ -23,8 +23,10 @@ incremental_copy:
     - cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
     - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
     - chmod 0600 /root/.ssh/ssh-key
+    - export LAUNCH_LAST_CONTAINER=$(ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}
+      ls -tr ${LAUNCH_TARGET_FOLDER}/containers/ | head -n 1)
     - time ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}
-      cp -al '${LAUNCH_TARGET_FOLDER}/containers/`ls -tr ${LAUNCH_TARGET_FOLDER}/containers/ | head -n 1`'
+      cp -al ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_LAST_CONTAINER}
       ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}
 
 transfer:
