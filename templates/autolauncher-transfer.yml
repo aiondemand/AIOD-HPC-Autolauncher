@@ -11,9 +11,9 @@ transfer:
   image: docker:stable
   stage: transfer
   script:
-    - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${amd}"'
+    - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - time apk add openssh-client rsync
-    - time docker run --rm --name isomorph-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
+    - time docker run --rm --name ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
       -e SINGULARITY_DOCKER_USERNAME=gitlab-ci-token -e SINGULARITY_DOCKER_PASSWORD=${CI_BUILD_TOKEN}
       -e DESTINATION="${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"
       -v ${SSH_KEY}:/tmp/ssh-key:Z -e CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA} -e CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME}
@@ -23,7 +23,7 @@ transfer:
       'singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}" &&
       apk add rsync openssh-client &&
       rsync -azuh --del -e "ssh -i /tmp/ssh-key" /tmp/container/
-      ${DESTINATION}:"${LAUNCH_TARGET_FOLDER}/containers/isomorphy-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}/"'
+      ${DESTINATION}:"${LAUNCH_TARGET_FOLDER}/containers/${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}/"'
     - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}/
     - time ssh -i ${LAUNCH_TARGET_SSH_KEY} ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} mkdir -p ${JOB_WORKDIR}/
     - time rsync -azuh --del -e "ssh -i ${LAUNCH_TARGET_SSH_KEY}" src/ ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}:${JOB_WORKDIR}/src/
