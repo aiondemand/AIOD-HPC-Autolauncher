@@ -6,6 +6,9 @@ variables:
     LAUNCH_CONFIG_PATH: configs/config.json
     KNOWN_HOSTS_FILE: some_file
     SINGULARITY_VERSION: 3.4.1
+    LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
+    LAUNCH_DESTINATION: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}
+    LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
 
 transfer:
   image: docker:stable
@@ -18,30 +21,27 @@ transfer:
     - cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
     - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
     - chmod 0600 /root/.ssh/ssh-key
-    - ssh -i /root/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} mkdir -p ${LAUNCH_TARGET_FOLDER}/containers/${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}/
-    - time docker run --rm --name ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
-      -e SINGULARITY_DOCKER_USERNAME=gitlab-ci-token -e SINGULARITY_DOCKER_PASSWORD=${CI_BUILD_TOKEN}
-      -e DESTINATION="${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"
+    - ssh -i /root/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} mkdir -p ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/
+    - time docker run --rm --name ${LAUNCH_VERSION}
+      -e SINGULARITY_DOCKER_USERNAME=gitlab-ci-token
+      -e SINGULARITY_DOCKER_PASSWORD=${CI_BUILD_TOKEN}
+      -e LAUNCH_DESTINATION="${LAUNCH_DESTINATION}"
       -e LAUNCH_TARGET_FOLDER="${LAUNCH_TARGET_FOLDER}"
-      -e CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA}
-      -e CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME}
-      -e CI_PROJECT_PATH="${CI_PROJECT_PATH}"
-      -e CI_PROJECT_NAME="${CI_PROJECT_NAME}"
       -e SINGULARITY_VERSION="${SINGULARITY_VERSION}"
       -v /root/.ssh:/root/.ssh:Z
       --entrypoint '' -v /var/run/docker.sock:/var/run/docker.sock
       --mount source=singularity,target=/root/.singularity
       quay.io/singularity/singularity:v${SINGULARITY_VERSION}-slim sh -c
-      'singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}" &&
+      'singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${LAUNCH_IMAGE_NAME}" &&
       apk add rsync openssh-client &&
       rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key" /tmp/container/
-      ${DESTINATION}:"${LAUNCH_TARGET_FOLDER}/containers/${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}/"'
-    - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}/
-    - time ssh -i /root/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} mkdir -p ${JOB_WORKDIR}/
-    - time rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key" src/ ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}:${JOB_WORKDIR}/src/
-    - time scp -i /root/.ssh/ssh-key ${LAUNCH_CONFIG_PATH} ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}:${JOB_WORKDIR}/
+      ${LAUNCH_DESTINATION}:"${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/"'
+    - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
+    - time ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION} mkdir -p ${JOB_WORKDIR}/
+    - time rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key" src/ ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/src/
+    - time scp -i /root/.ssh/ssh-key ${LAUNCH_CONFIG_PATH} ${DESTINATION}:${JOB_WORKDIR}/
     - wget https://gitlab.hpai.bsc.es/hpai/autolauncher/-/raw/main/autolauncher.py
-    - time scp -i /root/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}:${JOB_WORKDIR}/
+    - time scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/
   rules:
     - if: '$CI_COMMIT_TITLE =~ /^LAUNCH.*$/'
       when: on_success

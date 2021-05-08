@@ -1,5 +1,6 @@
 variables:
     DOCKERFILE: Dockerfile
+    LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
 
 build:
   image: docker:stable
@@ -10,8 +11,8 @@ build:
     - >-
       echo -e "[global]\ntimeout = 60\nindex-url = https://pypi.org/simple\ntrusted-host = pypi.org\n               hpai.bsc.es\nextra-index-url = https://${pypi_user}:${pypi_pass}@hpai.bsc.es:11080/simple/\n" > pip.conf
     - docker login -u gitlab-ci-token -p ${CI_BUILD_TOKEN} ci.atalaya.at
-    - docker build -t ci.atalaya.at/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME} -f ${DOCKERFILE} .
-    - docker push ci.atalaya.at/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
+    - docker build -t ci.atalaya.at/${LAUNCH_IMAGE_NAME} -f ${DOCKERFILE} .
+    - docker push ci.atalaya.at/${LAUNCH_IMAGE_NAME}
   rules:
     - when: always
 
