@@ -1,9 +1,6 @@
 variables:
     DOCKERFILE: Dockerfile
 
-stages:
-    - build
-
 build:
   image: docker:stable
   stage: build
