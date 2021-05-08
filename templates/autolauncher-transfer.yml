@@ -24,7 +24,7 @@ incremental_copy:
     - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
     - chmod 0600 /root/.ssh/ssh-key
     - time ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}
-      cp -al ${LAUNCH_TARGET_FOLDER}/containers/$(ls -tr ${LAUNCH_TARGET_FOLDER}/containers/ | head -n 1)
+      cp -al '${LAUNCH_TARGET_FOLDER}/containers/`ls -tr ${LAUNCH_TARGET_FOLDER}/containers/ | head -n 1`'
       ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}
 
 transfer:
