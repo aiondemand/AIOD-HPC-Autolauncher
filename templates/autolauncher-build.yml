@@ -1,5 +1,5 @@
 variables:
-    DOCKERFILE: DOCKERFILE
+    DOCKERFILE: Dockerfile
 
 stages:
     - build
