@@ -10,10 +10,27 @@ variables:
     LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     LAUNCH_DESTINATION: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
+    JOB_WORKDIR: ${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
+
+incremental_copy:
+  image: docker:stable
+  stage: transfer
+  script:
+    - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
+    - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
+    - time apk add openssh-client
+    - mkdir -p ~/.ssh/
+    - cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
+    - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
+    - chmod 0600 /root/.ssh/ssh-key
+    - time ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}
+      cp -al ${LAUNCH_TARGET_FOLDER}/containers/$(ls -tr ${LAUNCH_TARGET_FOLDER}/containers/ | head -n 1)
+      ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}
 
 transfer:
   image: docker:stable
   stage: transfer
+  needs: incremental_copy
   script:
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
@@ -39,7 +56,6 @@ transfer:
       apk add rsync openssh-client &&
       rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key" /tmp/container/
       ${LAUNCH_DESTINATION}:"${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/"'
-    - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
     - time ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION} mkdir -p ${JOB_WORKDIR}/
     - time rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key" ${LAUNCH_TARGET_SRC_DIR} ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/${LAUNCH_TARGET_SRC_DIR}
     - time scp -i /root/.ssh/ssh-key ${LAUNCH_CONFIG_PATH} ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/
