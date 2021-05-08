@@ -3,7 +3,6 @@ variables:
     LAUNCH_TARGET_USERNAME: hpai
     LAUNCH_TARGET_FOLDER: /gpfs/projects/bsc70/hpai/storage/data/tests/
     LAUNCH_TARGET_SSH_KEY: some_file
-    LAUNCH_TRIGGER_PATTERN: LAUNCH_AMD
     LAUNCH_CONFIG_PATH: configs/config.json
     KNOWN_HOSTS_FILE: some_file
     SINGULARITY_VERSION: 3.4.1
@@ -32,6 +31,6 @@ transfer:
     - wget https://gitlab.hpai.bsc.es/hpai/autolauncher/-/raw/main/autolauncher.py
     - time scp -i ${LAUNCH_TARGET_SSH_KEY} ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}:${JOB_WORKDIR}/
   rules:
-    - if: '$CI_COMMIT_TITLE =~ /^${LAUNCH_TRIGGER_PATTERN}.*$/'
+    - if: '$CI_COMMIT_TITLE =~ /^LAUNCH.*$/'
       when: on_success
     - when: never
