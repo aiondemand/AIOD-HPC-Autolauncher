@@ -18,6 +18,7 @@ transfer:
     - cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
     - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
     - chmod 0600 /root/.ssh/ssh-key
+    - ssh -i /root/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} mkdir -p ${LAUNCH_TARGET_FOLDER}/containers/${CI_PROJECT_PATH}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}/
     - time docker run --rm --name ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
       -e SINGULARITY_DOCKER_USERNAME=gitlab-ci-token -e SINGULARITY_DOCKER_PASSWORD=${CI_BUILD_TOKEN}
       -e DESTINATION="${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"
@@ -33,7 +34,7 @@ transfer:
       'singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}" &&
       apk add rsync openssh-client &&
       rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key" /tmp/container/
-      ${DESTINATION}:"${LAUNCH_TARGET_FOLDER}/containers/${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}/"'
+      ${DESTINATION}:"${LAUNCH_TARGET_FOLDER}/containers/${CI_PROJECT_PATH}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}/"'
     - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}/
     - time ssh -i /root/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} mkdir -p ${JOB_WORKDIR}/
     - time rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key" src/ ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}:${JOB_WORKDIR}/src/
