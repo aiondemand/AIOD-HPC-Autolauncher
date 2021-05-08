@@ -16,6 +16,9 @@ transfer:
     - time docker run --rm --name ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
       -e SINGULARITY_DOCKER_USERNAME=gitlab-ci-token -e SINGULARITY_DOCKER_PASSWORD=${CI_BUILD_TOKEN}
       -e DESTINATION="${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"
+      -e LAUNCH_TARGET_FOLDER="${LAUNCH_TARGET_FOLDER}"
+      -e CI_PROJECT_PATH="${CI_PROJECT_PATH}"
+      -e SINGULARITY_VERSION="${SINGULARITY_VERSION}"
       -v ${SSH_KEY}:/tmp/ssh-key:Z -e CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA} -e CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME}
       --entrypoint '' -v /var/run/docker.sock:/var/run/docker.sock
       --mount source=singularity,target=/root/.singularity
