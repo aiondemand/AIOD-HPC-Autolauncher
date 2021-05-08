@@ -18,13 +18,17 @@ transfer:
       -e SINGULARITY_DOCKER_USERNAME=gitlab-ci-token -e SINGULARITY_DOCKER_PASSWORD=${CI_BUILD_TOKEN}
       -e DESTINATION="${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"
       -e LAUNCH_TARGET_FOLDER="${LAUNCH_TARGET_FOLDER}"
+      -e CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA}
+      -e CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME}
       -e CI_PROJECT_PATH="${CI_PROJECT_PATH}"
       -e SINGULARITY_VERSION="${SINGULARITY_VERSION}"
-      -v ${LAUNCH_TARGET_SSH_KEY}:/tmp/ssh-key:Z -e CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA} -e CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME}
+      -v ${LAUNCH_TARGET_SSH_KEY}:/tmp/ssh-key:Z
+      -v ${KNOWN_HOSTS_FILE}:/tmp/known_hosts:Z
       --entrypoint '' -v /var/run/docker.sock:/var/run/docker.sock
       --mount source=singularity,target=/root/.singularity
       quay.io/singularity/singularity:v${SINGULARITY_VERSION}-slim sh -c
-      'singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}" &&
+      'mkdir -p ~/.ssh/ && cp /tmp/known_hosts ~/.ssh/known_hosts &&
+      singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}" &&
       apk add rsync openssh-client &&
       rsync -azuh --del -e "ssh -i /tmp/ssh-key" /tmp/container/
       ${DESTINATION}:"${LAUNCH_TARGET_FOLDER}/containers/${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}/"'
