@@ -29,7 +29,8 @@ transfer:
       --entrypoint '' -v /var/run/docker.sock:/var/run/docker.sock
       --mount source=singularity,target=/root/.singularity
       quay.io/singularity/singularity:v${SINGULARITY_VERSION}-slim sh -c
-      'singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}" &&
+      'chmod 0600 /tmp/ssh-key &&
+      singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}" &&
       apk add rsync openssh-client &&
       rsync -azuh --del -e "ssh -i /tmp/ssh-key" /tmp/container/
       ${DESTINATION}:"${LAUNCH_TARGET_FOLDER}/containers/${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}/"'
