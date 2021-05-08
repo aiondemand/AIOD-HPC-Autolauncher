@@ -3,6 +3,7 @@ variables:
     LAUNCH_TARGET_USERNAME: hpai
     LAUNCH_TARGET_FOLDER: /gpfs/projects/bsc70/hpai/storage/data/tests/
     LAUNCH_TARGET_SSH_KEY: some_file
+    LAUNCH_TARGET_SRC_DIR: src/
     LAUNCH_CONFIG_PATH: configs/config.json
     KNOWN_HOSTS_FILE: some_file
     SINGULARITY_VERSION: 3.4.1
@@ -38,10 +39,10 @@ transfer:
       ${LAUNCH_DESTINATION}:"${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/"'
     - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
     - time ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION} mkdir -p ${JOB_WORKDIR}/
-    - time rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key" src/ ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/src/
+    - time rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key" ${LAUNCH_TARGET_SRC_DIR} ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/${LAUNCH_TARGET_SRC_DIR}
     - time scp -i /root/.ssh/ssh-key ${LAUNCH_CONFIG_PATH} ${DESTINATION}:${JOB_WORKDIR}/
     - wget https://gitlab.hpai.bsc.es/hpai/autolauncher/-/raw/main/autolauncher.py
-    - time scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/
+    - time scp -i /root/.ssh/ssh-key autolauncher.py ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/autolauncher.py
   rules:
     - if: '$CI_COMMIT_TITLE =~ /^LAUNCH.*$/'
       when: on_success
