@@ -13,7 +13,7 @@ build:
     - >-
       echo -e "[global]\ntimeout = 60\nindex-url = https://pypi.org/simple\ntrusted-host = pypi.org\n               hpai.bsc.es\nextra-index-url = https://${pypi_user}:${pypi_pass}@hpai.bsc.es:11080/simple/\n" > pip.conf
     - docker login -u gitlab-ci-token -p ${CI_BUILD_TOKEN} ci.atalaya.at
-    - docker build -t ci.atalaya.at/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA} .
+    - docker build -t ci.atalaya.at/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA} -f ${DOCKERFILE} .
     - docker push ci.atalaya.at/victor/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}
   rules:
     - when: always
