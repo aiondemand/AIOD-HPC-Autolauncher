@@ -42,7 +42,7 @@ transfer:
     - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
     - time ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION} mkdir -p ${JOB_WORKDIR}/
     - time rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key" ${LAUNCH_TARGET_SRC_DIR} ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/${LAUNCH_TARGET_SRC_DIR}
-    - time scp -i /root/.ssh/ssh-key ${LAUNCH_CONFIG_PATH} ${DESTINATION}:${JOB_WORKDIR}/
+    - time scp -i /root/.ssh/ssh-key ${LAUNCH_CONFIG_PATH} ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/
     - wget https://gitlab.hpai.bsc.es/hpai/autolauncher/-/raw/main/autolauncher.py
     - time scp -i /root/.ssh/ssh-key autolauncher.py ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/autolauncher.py
   rules:
