@@ -23,7 +23,7 @@ transfer:
       -e CI_PROJECT_PATH="${CI_PROJECT_PATH}"
       -e SINGULARITY_VERSION="${SINGULARITY_VERSION}"
       -v ${LAUNCH_TARGET_SSH_KEY}:/tmp/ssh-key:Z
-      -v ${KNOWN_HOSTS_FILE}:/tmp/known_hosts:Z
+      -v $(pwd)/${KNOWN_HOSTS_FILE}:/tmp/known_hosts:Z
       --entrypoint '' -v /var/run/docker.sock:/var/run/docker.sock
       --mount source=singularity,target=/root/.singularity
       quay.io/singularity/singularity:v${SINGULARITY_VERSION}-slim sh -c
