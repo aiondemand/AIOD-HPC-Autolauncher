@@ -52,7 +52,7 @@ class LauncherWriter(object):
 
     def python_command(self):
 
-        python_command = 'python ' + self.configuration['workdir'] + self.configuration['command'] + ' ' + \
+        python_command = self.configuration['binary'] + ' ' + self.configuration['workdir'] + self.configuration['command'] + ' ' + \
                          self.configuration['args'] + ' --COMMIT_TAG ' + self.ctag()
 
         return python_command
@@ -297,6 +297,8 @@ if __name__ == '__main__':
                         help='Path to the container directory to use as execution context')
     parser.add_argument('-l', '--singularity-version',
                         help='Version of singularity to use', default='3.6.4')
+    parser.add_argument('-b', '--binary',
+                        help='Binary to start execution (by default: python)', default='python')
     parser.add_argument('-n', '--nolaunch',
                         help='Only create, do not launch')
 
