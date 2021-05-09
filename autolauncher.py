@@ -304,6 +304,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     with open(args.file) as f:
+        args_dict = vars(args)
+        args_dict = {k: v for k, v in args_dict.items() if v is not None}
         params = json.load(f)
         params.update(vars(args))
         create_and_launch(params)
