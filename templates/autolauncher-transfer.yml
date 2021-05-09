@@ -10,6 +10,7 @@ variables:
     LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     LAUNCH_DESTINATION: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
+    AUTOLAUNCHER_VERSION: main
 
 transfer:
   image: docker:stable
@@ -48,8 +49,8 @@ transfer:
     - time ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION} mkdir -p ${JOB_WORKDIR}/
     - time rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key" ${LAUNCH_TARGET_SRC_DIR} ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/${LAUNCH_TARGET_SRC_DIR}
     - time scp -i /root/.ssh/ssh-key ${LAUNCH_CONFIG_PATH} ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/
-    - wget https://gitlab.hpai.bsc.es/hpai/autolauncher/-/raw/main/autolauncher.py
-    - time scp -i /root/.ssh/ssh-key autolauncher.py ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/autolauncher.py
+    - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
+    - time scp -i /root/.ssh/ssh-key /tmp/autolauncher/autolauncher.py ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/autolauncher.py
   rules:
     - if: '$CI_COMMIT_TITLE =~ /^LAUNCH.*$/'
       when: on_success
