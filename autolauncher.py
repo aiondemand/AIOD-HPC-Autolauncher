@@ -111,9 +111,9 @@ class MNLauncherWriter(SlurmLauncherWriter):
         command.append('unset TMPDIR')
 
 
-        SINGULARITY_PATH = '/apps/SINGULARITY/3.6.4/bin/singularity'
+        SINGULARITY_PATH = '/apps/SINGULARITY/' + params['singularity_version'] + '/bin/singularity'
         SINGULARITY_BIND_PATH = '/gpfs/projects/bsc70/hpai/storage/data/:/gpfs/projects/bsc70/hpai/storage/data/'
-        SINGULARITY_WRITABLE_PATH = '/gpfs/projects/bsc70/hpai/storage/data/isomorphy/containers/isomorphy-' + self.ctag() + '-' + '$CI_COMMIT_REF_NAME'
+        SINGULARITY_WRITABLE_PATH = params['containerdir']
         extra_flags = self.get_extra_singularity_flags()
         SINGULARITY_COMMAND = SINGULARITY_PATH + ' exec ' + ' ' + extra_flags + '\\\n' + \
                               ' -B ' + SINGULARITY_BIND_PATH + ' \\\n  --writable ' + \
@@ -293,12 +293,15 @@ if __name__ == '__main__':
                         default='/gpfs/projects/bsc70/hpai/storage/data/{{CLUSTER_WORKING_DIR}}/dataset_preprocessing.json')
     parser.add_argument('-w', '--workdir',
                         help='Path to the working directory for the job')
+    parser.add_argument('-c', '--containerdir',
+                        help='Path to the container directory to use as execution context')
+    parser.add_argument('-l', '--singularity-version',
+                        help='Version of singularity to use', default='3.6.4')
     parser.add_argument('-n', '--nolaunch',
                         help='Only create, do not launch')
 
     args = parser.parse_args()
     with open(args.file) as f:
         params = json.load(f)
-        if 'workdir' not in params:
-            params['workdir'] = args.workdir
+        params.update(vars(args))
         create_and_launch(params)
