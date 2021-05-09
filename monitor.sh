@@ -10,6 +10,6 @@ do
 
   cat $JOB_WORKDIR/output/*_out.txt | tail -n 15
   echo "Still running..."
-  sleep 600
+  sleep 60
   let "a = a + 1"
 done
