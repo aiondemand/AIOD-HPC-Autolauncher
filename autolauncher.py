@@ -296,15 +296,17 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--containerdir',
                         help='Path to the container directory to use as execution context')
     parser.add_argument('-l', '--singularity-version',
-                        help='Version of singularity to use', default='3.6.4')
+                        help='Version of singularity to use')
     parser.add_argument('-b', '--binary',
-                        help='Binary to start execution (by default: python)', default='python')
+                        help='Binary to start execution (by default: python)')
     parser.add_argument('-n', '--nolaunch',
                         help='Only create, do not launch')
 
+    defaults = {'binary': 'python', 'singularity_version': '3.6.4'}
     args = parser.parse_args()
     with open(args.file) as f:
         args_dict = {k: v for k, v in vars(args).items() if v is not None}
         params = json.load(f)
-        params.update(args_dict)
+        defaults.update(params)
+        defaults.update(args_dict)
         create_and_launch(params)
