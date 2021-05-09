@@ -1,15 +1,12 @@
 variables:
-    LAUNCH_TARGET_HOSTNAME: amdlogin.bsc.es
     LAUNCH_TARGET_USERNAME: hpai
-    LAUNCH_TARGET_FOLDER: /gpfs/projects/bsc70/hpai/storage/data/tests/
+    LAUNCH_TARGET_HOSTNAME: amdlogin.bsc.es
     LAUNCH_TARGET_SSH_KEY: some_file
-    LAUNCH_TARGET_SRC_DIR: src/
-    LAUNCH_CONFIG_PATH: configs/config.json
-    KNOWN_HOSTS_FILE: some_file
-    SINGULARITY_VERSION: 3.6.4
+    LAUNCH_TARGET_FOLDER: /gpfs/projects/bsc70/hpai/storage/data/tests/
     LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
+    KNOWN_HOSTS_FILE: some_file
+    AUTOLAUNCHER_VERSION: main
     LAUNCH_DESTINATION: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}
-    LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
 
 monitor:
   image: docker:stable
