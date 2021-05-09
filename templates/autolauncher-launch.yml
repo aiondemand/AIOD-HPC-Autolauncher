@@ -23,6 +23,7 @@ launch:
     - cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
     - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
     - chmod 0600 /root/.ssh/ssh-key
+    - echo "Executing command env MINIO_ACCESS_KEY="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY="\"$MINIO_SECRET_KEY_CLEAN\"" CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} ZIP_KEY=$ZIP_KEY SSEC_KEY=$SSEC_KEY PYTHONPATH=${JOB_WORKDIR}/${LAUNCH_TARGET_SRC_DIR} python ${JOB_WORKDIR}/autolauncher.py --file ${JOB_WORKDIR}/config.json --workdir ${JOB_WORKDIR} --containerdir ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/ --singularity-version ${SINGULARITY_VERSION}"
     - ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION} env MINIO_ACCESS_KEY="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY="\"$MINIO_SECRET_KEY_CLEAN\"" CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} ZIP_KEY=$ZIP_KEY SSEC_KEY=$SSEC_KEY PYTHONPATH=${JOB_WORKDIR}/${LAUNCH_TARGET_SRC_DIR} python ${JOB_WORKDIR}/autolauncher.py --file ${JOB_WORKDIR}/config.json --workdir ${JOB_WORKDIR} --containerdir ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/ --singularity-version ${SINGULARITY_VERSION} > job.pid
     - 'rm -f /tmp/ssh-key'
   artifacts:
