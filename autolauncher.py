@@ -282,7 +282,7 @@ def create_and_launch(params):
     write_launcher(params)
 
     # Launch
-    if 'nolaunch' not in params and not params['nolaunch']:
+    if 'nolaunch' not in params or params['nolaunch'] is None:
         launch_job(params)
 
 
