@@ -309,4 +309,4 @@ if __name__ == '__main__':
         params = json.load(f)
         defaults.update(params)
         defaults.update(args_dict)
-        create_and_launch(params)
+        create_and_launch(defaults)
