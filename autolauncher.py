@@ -111,9 +111,9 @@ class MNLauncherWriter(SlurmLauncherWriter):
         command.append('unset TMPDIR')
 
 
-        SINGULARITY_PATH = '/apps/SINGULARITY/' + params['singularity_version'] + '/bin/singularity'
+        SINGULARITY_PATH = '/apps/SINGULARITY/' + self.configuration['singularity_version'] + '/bin/singularity'
         SINGULARITY_BIND_PATH = '/gpfs/projects/bsc70/hpai/storage/data/:/gpfs/projects/bsc70/hpai/storage/data/'
-        SINGULARITY_WRITABLE_PATH = params['containerdir']
+        SINGULARITY_WRITABLE_PATH = self.configuration['containerdir']
         extra_flags = self.get_extra_singularity_flags()
         SINGULARITY_COMMAND = SINGULARITY_PATH + ' exec ' + ' ' + extra_flags + '\\\n' + \
                               ' -B ' + SINGULARITY_BIND_PATH + ' \\\n  --writable ' + \
@@ -310,4 +310,4 @@ if __name__ == '__main__':
         defaults.update(params)
         defaults.update(args_dict)
         print("Parameters: " + str(defaults))
-        # create_and_launch(defaults)
+        create_and_launch(defaults)
