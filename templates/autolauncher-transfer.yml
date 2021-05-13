@@ -27,8 +27,8 @@ transfer:
     - ssh -i /root/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} mkdir -p ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/
     - export LAUNCH_LAST_CONTAINER=$(ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}
       ls -tr ${LAUNCH_TARGET_FOLDER}/containers/ | head -n 1)
-    - export KNOWN_HOSTS_CONTENT="$(cat /root/.ssh/known_hosts)"
-    - export SSH_KEY_CONTENT="$(cat /root/.ssh/ssh_key)"
+    - export KNOWN_HOSTS_CONTENT="$(cat /root/.ssh/known_hosts | base64)"
+    - export SSH_KEY_CONTENT="$(cat /root/.ssh/ssh-key | base64)"
     - time docker run --rm --name ${LAUNCH_VERSION}
       -e SINGULARITY_DOCKER_USERNAME=gitlab-ci-token
       -e SINGULARITY_DOCKER_PASSWORD=${CI_BUILD_TOKEN}
@@ -43,7 +43,7 @@ transfer:
       --entrypoint '' -v /var/run/docker.sock:/var/run/docker.sock
       --mount source=singularity,target=/root/.singularity
       quay.io/singularity/singularity:v${SINGULARITY_VERSION}-slim sh -c
-      'mkdir -p /root/.ssh/ && echo ${KNOWN_HOSTS_CONTENT} > /root/.ssh/known_hosts && echo ${SSH_KEY_CONTENT} > /root/.ssh/ssh-key && chmod 0600 /root/.ssh/ssh-key && cat /root/.ssh/known_hosts &&
+      'mkdir -p /root/.ssh/ && echo ${KNOWN_HOSTS_CONTENT} | base64 -d > /root/.ssh/known_hosts && echo ${SSH_KEY_CONTENT} | base64 -d > /root/.ssh/ssh-key && chmod 0600 /root/.ssh/ssh-key && cat /root/.ssh/known_hosts &&
       singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${LAUNCH_IMAGE_NAME}" &&
       apk add rsync openssh-client &&
       rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key -o UserKnownHostsFile=/root/.ssh/known_hosts"
