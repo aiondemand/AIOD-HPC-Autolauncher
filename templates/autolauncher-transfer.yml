@@ -46,7 +46,7 @@ transfer:
       'mkdir -p /root/.ssh/ && echo ${KNOWN_HOSTS_CONTENT} > /root/.ssh/known_hosts && echo ${SSH_KEY_CONTENT} > /root/.ssh/ssh-key && chmod 0600 /root/.ssh/ssh-key &&
       singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${LAUNCH_IMAGE_NAME}" &&
       apk add rsync openssh-client &&
-      rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key"
+      rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key -o UserKnownHostsFile=/root/.ssh/known_hosts"
       --link-dest="${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_LAST_CONTAINER}/"
       /tmp/container/
       ${LAUNCH_DESTINATION}:"${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/"'
