@@ -13,7 +13,7 @@ variables:
     AUTOLAUNCHER_VERSION: main
 
 transfer:
-  image: docker:stable
+  image: ci.atalaya.at/containers/docker:stable
   stage: transfer
   script:
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'

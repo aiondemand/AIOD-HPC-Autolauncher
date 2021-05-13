@@ -11,7 +11,7 @@ variables:
     LAUNCH_DESTINATION: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}
 
 launch:
-  image: docker:stable
+  image: ci.atalaya.at/containers/docker:stable
   stage: launch
   script:
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'

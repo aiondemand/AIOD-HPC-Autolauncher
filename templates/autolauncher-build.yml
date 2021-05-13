@@ -3,7 +3,7 @@ variables:
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
 
 build:
-  image: docker:stable
+  image: ci.atalaya.at/containers/docker:stable
   stage: build
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
