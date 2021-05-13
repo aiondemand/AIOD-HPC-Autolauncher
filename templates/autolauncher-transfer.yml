@@ -7,9 +7,9 @@ variables:
     LAUNCH_CONFIG_PATH: configs/config.json
     KNOWN_HOSTS_FILE: some_file
     SINGULARITY_VERSION: 3.4.1
-    LAUNCH_VERSION: ${CI_PROJECT_NAME,,}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME,,}
+    LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     LAUNCH_DESTINATION: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}
-    LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH,,}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME,,}
+    LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     AUTOLAUNCHER_VERSION: main
 
 transfer:
@@ -18,8 +18,9 @@ transfer:
   script:
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
+    - time apk add openssh-client rsync git bash
+    - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
     - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
-    - time apk add openssh-client rsync git
     - mkdir -p ~/.ssh/
     - cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
     - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
