@@ -36,11 +36,13 @@ transfer:
       -e LAUNCH_VERSION="${LAUNCH_VERSION}"
       -e LAUNCH_LAST_CONTAINER="${LAUNCH_LAST_CONTAINER}"
       -e SINGULARITY_VERSION="${SINGULARITY_VERSION}"
-      -v /root/.ssh:/root/.ssh:Z
+      -e KNOWN_HOSTS_CONTENT="$(cat /root/.ssh/known_hosts)"
+      -e SSH_KEY_CONTENT="$(cat /root/.ssh/ssh_key)"
       --entrypoint '' -v /var/run/docker.sock:/var/run/docker.sock
       --mount source=singularity,target=/root/.singularity
       quay.io/singularity/singularity:v${SINGULARITY_VERSION}-slim sh -c
-      'singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${LAUNCH_IMAGE_NAME}" &&
+      'mkdir -p /root/.ssh/ && echo ${KNOWN_HOSTS_CONTENT} > /root/.ssh/known_hosts && echo ${SSH_KEY_CONTENT} > /root/.ssh/ssh-key && chmod 0600 /root/.ssh/ssh-key &&
+      singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${LAUNCH_IMAGE_NAME}" &&
       apk add rsync openssh-client &&
       rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key"
       --link-dest="${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_LAST_CONTAINER}/"
