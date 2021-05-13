@@ -53,7 +53,10 @@ class LauncherWriter(object):
     def python_command(self):
 
         python_command = self.configuration['binary'] + ' ' + self.configuration['workdir'] + self.configuration['command'] + ' ' + \
-                         self.configuration['args'] + ' --COMMIT_TAG ' + self.ctag()
+                         self.configuration['args']
+        
+        if self.configuration['add_commit_tag']:
+            python_command = python_command + ' --COMMIT_TAG ' + self.ctag()
 
         return python_command
 
@@ -299,10 +302,12 @@ if __name__ == '__main__':
                         help='Version of singularity to use')
     parser.add_argument('-b', '--binary',
                         help='Binary to start execution (by default: python)')
+    parser.add_argument('-t', '--add-commit-tag',
+                        help='Add commit tag as an argument or not (by default: False)')
     parser.add_argument('-n', '--nolaunch',
                         help='Only create, do not launch')
 
-    defaults = {'binary': 'python', 'singularity_version': '3.6.4'}
+    defaults = {'binary': 'python', 'singularity_version': '3.6.4', 'add_commit_tag': False}
     args = parser.parse_args()
     with open(args.file) as f:
         args_dict = {k: v for k, v in vars(args).items() if v is not None}
