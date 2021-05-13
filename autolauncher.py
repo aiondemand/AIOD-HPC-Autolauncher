@@ -51,9 +51,9 @@ class LauncherWriter(object):
         return ctag_to_use
 
     def python_command(self):
-
-        python_command = self.configuration['binary'] + ' ' + self.configuration['workdir'] + self.configuration['command'] + ' ' + \
-                         self.configuration['args']
+        args = self.configuration.get('args', '')
+        python_command = self.configuration['binary'] + ' ' + self.configuration['workdir'] + self.configuration['command'] + ' ' + args
+                         
         
         if self.configuration['add_commit_tag']:
             python_command = python_command + ' --COMMIT_TAG ' + self.ctag()
