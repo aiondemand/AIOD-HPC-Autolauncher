@@ -52,8 +52,12 @@ class LauncherWriter(object):
 
     def python_command(self):
         args = self.configuration.get('args', '')
-        python_command = self.configuration['binary'] + ' ' + self.configuration['workdir'] + self.configuration['command'] + ' ' + args
-                         
+        python_command = self.configuration['binary'] + ' '
+        
+        if self.configuration['use_code_in_gpfs']:
+            python_command = python_command + self.configuration['workdir'] + '/'
+            
+        python_command = python_command + self.configuration['command'] + ' ' + args                 
         
         if self.configuration['add_commit_tag']:
             python_command = python_command + ' --COMMIT_TAG ' + self.ctag()
@@ -306,8 +310,10 @@ if __name__ == '__main__':
                         help='Add commit tag as an argument or not (by default: False)')
     parser.add_argument('-n', '--nolaunch',
                         help='Only create, do not launch')
+    parser.add_argument('-g', '--use-code-in-gpfs',
+                        help='Use code in the GPFS job workdir instead of looking for it inside the container (default: True')
 
-    defaults = {'binary': 'python', 'singularity_version': '3.6.4', 'add_commit_tag': False}
+    defaults = {'binary': 'python', 'singularity_version': '3.6.4', 'add_commit_tag': False, 'use_code_in_gpfs': True}
     args = parser.parse_args()
     with open(args.file) as f:
         args_dict = {k: v for k, v in vars(args).items() if v is not None}
