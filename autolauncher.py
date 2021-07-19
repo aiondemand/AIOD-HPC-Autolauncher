@@ -99,37 +99,32 @@ class SlurmLauncherWriter(LauncherWriter):
 
 class MNLauncherWriter(SlurmLauncherWriter):
     def extra_headers(self):
-        return []
-
-    def launcher_headers(self):
-        headers = [
-            '#!/bin/bash'
-        ]
-
-        headers = headers + self.extra_headers()
+        headers = []
+        if self.configuration.get('highmem'):
+            headers.append('#SBATCH --constraint=highmem')
 
         return headers
 
     def launcher_command(self):
         command = ['export PYTHONPATH=src']
-        command.append('export AWS_ACCESS_KEY_ID="$MINIO_ACCESS_KEY"')
-        command.append('export AWS_SECRET_ACCESS_KEY="$MINIO_SECRET_KEY"')
-        command.append('export MINIO_DOMAIN=https://localhost:9000')
-        command.append('export SSEC_KEY=$SSEC_KEY')
-        command.append('export ZIP_KEY=$ZIP_KEY')
+        command.append('export SINGULARITYENV_AWS_ACCESS_KEY_ID="$MINIO_ACCESS_KEY"')
+        command.append('export SINGULARITYENV_AWS_SECRET_ACCESS_KEY="$MINIO_SECRET_KEY"')
+        command.append('export SINGULARITYENV_MINIO_DOMAIN=https://localhost:9000')
+        command.append('export SINGULARITYENV_SSEC_KEY=$SSEC_KEY')
+        command.append('export SINGULARITYENV_ZIP_KEY=$ZIP_KEY')
         command.append('export CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA')
 
         # temp fix from support:
         command.append('unset TMPDIR')
 
 
-        SINGULARITY_PATH = 'docker'
+        SINGULARITY_PATH = '/apps/SINGULARITY/' + self.configuration['singularity_version'] + '/bin/singularity'
         SINGULARITY_BIND_PATH = '/gpfs/projects/bsc70/hpai/storage/data/:/gpfs/projects/bsc70/hpai/storage/data/'
         SINGULARITY_WRITABLE_PATH = self.configuration['containerdir']
         extra_flags = self.get_extra_singularity_flags()
-        SINGULARITY_COMMAND = SINGULARITY_PATH + ' run ' + ' ' + extra_flags + '\\\n' + \
-                              ' -v ' + SINGULARITY_BIND_PATH + ':' + SINGULARITY_BIND_PATH + ':Z' + ' \\\n   ' + \
-                              ' \\\n ' + SINGULARITY_WRITABLE_PATH + ' bash -c "' + self.python_command() + '"'
+        SINGULARITY_COMMAND = SINGULARITY_PATH + ' exec ' + ' ' + extra_flags + '\\\n' + \
+                              ' -B ' + SINGULARITY_BIND_PATH + ' \\\n  --writable ' + \
+                              SINGULARITY_WRITABLE_PATH + ' \\\n  bash -c "' + self.python_command() + '"'
 
         command.append(SINGULARITY_COMMAND)
 
@@ -138,7 +133,7 @@ class MNLauncherWriter(SlurmLauncherWriter):
         return command
 
     def get_extra_singularity_flags(self):
-        return '-d'
+        return ''
 
 
 class P9LauncherWriter(SlurmLauncherWriter):
@@ -186,11 +181,47 @@ class AMDLauncher(MNLauncherWriter):
 
 
 class MiniNLauncherWriter(LauncherWriter):
+    def extra_headers(self):
+        return []
+
     def launcher_headers(self):
-        raise NotImplementedError
+        headers = [
+            '#!/bin/bash'
+        ]
+
+        headers = headers + self.extra_headers()
+
+        return headers
 
     def launcher_command(self):
-        raise NotImplementedError
+        command = ['export PYTHONPATH=src']
+        command.append('export AWS_ACCESS_KEY_ID="$MINIO_ACCESS_KEY"')
+        command.append('export AWS_SECRET_ACCESS_KEY="$MINIO_SECRET_KEY"')
+        command.append('export MINIO_DOMAIN=https://localhost:9000')
+        command.append('export SSEC_KEY=$SSEC_KEY')
+        command.append('export ZIP_KEY=$ZIP_KEY')
+        command.append('export CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA')
+
+        # temp fix from support:
+        command.append('unset TMPDIR')
+
+
+        SINGULARITY_PATH = 'docker'
+        SINGULARITY_BIND_PATH = '/gpfs/projects/bsc70/hpai/storage/data/:/gpfs/projects/bsc70/hpai/storage/data/'
+        SINGULARITY_WRITABLE_PATH = self.configuration['containerdir']
+        extra_flags = self.get_extra_singularity_flags()
+        SINGULARITY_COMMAND = SINGULARITY_PATH + ' run ' + ' ' + extra_flags + '\\\n' + \
+                              ' -v ' + SINGULARITY_BIND_PATH + ':' + SINGULARITY_BIND_PATH + ':Z' + ' \\\n   ' + \
+                              ' \\\n ' + SINGULARITY_WRITABLE_PATH + ' bash -c "' + self.python_command() + '"'
+
+        command.append(SINGULARITY_COMMAND)
+
+        root.info('**LAUNCHING COMMAND** %s', str(command))
+
+        return command
+
+    def get_extra_singularity_flags(self):
+        return '-d'
 
 
 LAUNCHER_WRITERS = {'mn4': MNLauncherWriter,
