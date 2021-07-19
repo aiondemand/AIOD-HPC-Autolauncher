@@ -43,11 +43,12 @@ launch_mini:
   stage: launch
   script:
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
-    - apk add python3 bash
-    - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
+    - time apk add rsync git bash python3
     - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
-    - echo "Executing command env CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} PYTHONPATH=${JOB_WORKDIR}/${LAUNCH_TARGET_SRC_DIR} python ${JOB_WORKDIR}/autolauncher.py --file ${JOB_WORKDIR}/config.json --workdir ${JOB_WORKDIR} --containerdir ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/ --singularity-version ${SINGULARITY_VERSION}" 
-    - env MINIO_ACCESS_KEY="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY="\"$MINIO_SECRET_KEY_CLEAN\"" CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} ZIP_KEY=$ZIP_KEY SSEC_KEY=$SSEC_KEY PYTHONPATH=${JOB_WORKDIR}/${LAUNCH_TARGET_SRC_DIR} python3 ${JOB_WORKDIR}/autolauncher.py --file ${JOB_WORKDIR}/config.json --workdir ${JOB_WORKDIR} --containerdir ${LAUNCH_IMAGE_NAME} > job.pid
+    - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
+    - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
+    - echo "Executing command env CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} python3 /tmp/autolauncher/autolauncher.py --file ${LAUNCH_CONFIG_PATH} --workdir ${JOB_WORKDIR} -containerdir ${LAUNCH_IMAGE_NAME}" 
+    - env MINIO_ACCESS_KEY="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY="\"$MINIO_SECRET_KEY_CLEAN\"" CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} ZIP_KEY=$ZIP_KEY SSEC_KEY=$SSEC_KEY python3 /tmp/autolauncher/autolauncher.py --file ${LAUNCH_CONFIG_PATH} --workdir ${JOB_WORKDIR} --containerdir ${LAUNCH_IMAGE_NAME} > job.pid
   artifacts:
     paths:
       - job.pid
