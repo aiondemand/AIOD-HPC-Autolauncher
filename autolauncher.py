@@ -210,9 +210,15 @@ class MiniNLauncherWriter(LauncherWriter):
         SINGULARITY_BIND_PATH = '/gpfs/projects/bsc70/hpai/storage/data/:/gpfs/projects/bsc70/hpai/storage/data/'
         SINGULARITY_WRITABLE_PATH = self.configuration['containerdir']
         extra_flags = self.get_extra_singularity_flags()
-        SINGULARITY_COMMAND = SINGULARITY_PATH + ' run ' + ' ' + extra_flags + '\\\n' + \
-                              ' -v ' + SINGULARITY_BIND_PATH + ':' + SINGULARITY_BIND_PATH + ':Z' + ' \\\n   ' + \
-                              ' \\\n ' + SINGULARITY_WRITABLE_PATH + ' bash -c "' + self.python_command() + '"'
+        SINGULARITY_COMMAND = SINGULARITY_PATH + ' run ' + ' ' + extra_flags + \
+                              ' -v ' + SINGULARITY_BIND_PATH + ':Z ' + \
+                              '-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} ' + \
+                              '-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} ' + \
+                              '-e MINIO_DOMAIN=${MINIO_DOMAIN} ' + \
+                              '-e SSEC_KEY=${SSEC_KEY} ' + \
+                              '-e ZIP_KEY=${ZIP_KEY} ' + \
+                              '-e CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA} ' + \
+                              SINGULARITY_WRITABLE_PATH + ' bash -c "' + self.python_command() + '"'
 
         command.append(SINGULARITY_COMMAND)
 
@@ -311,6 +317,9 @@ def launch_job(params):
         # subprocess.call('scancel 11370504', shell=True)
 
         return batch_stdout
+    except subprocess.CalledProcessError as e:
+        root.error(e.output)
+        root.error('Could not launch the job')
     except:
         root.error('Could not launch the job')
 
