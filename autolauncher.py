@@ -99,9 +99,14 @@ class SlurmLauncherWriter(LauncherWriter):
 
 class MNLauncherWriter(SlurmLauncherWriter):
     def extra_headers(self):
-        headers = []
-        if self.configuration.get('highmem'):
-            headers.append('#SBATCH --constraint=highmem')
+        return []
+
+    def launcher_headers(self):
+        headers = [
+            '#!/bin/bash'
+        ]
+
+        headers = headers + self.extra_headers()
 
         return headers
 
