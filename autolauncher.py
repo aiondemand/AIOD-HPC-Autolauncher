@@ -261,7 +261,11 @@ def launch_job(params):
     Submit the file launcher_filepath
     """
     try:
-        batch_cmd = 'sbatch ' + params['launcher_filepath']
+        if params['cluster'] == 'mini':
+            batch_cmd = 'sbatch ' + params['launcher_filepath']
+        else:
+            batch_cmd = 'bash ' + params['launcher_filepath']
+            
         batch_stdout = subprocess.check_output(batch_cmd, shell=True)
 
         root.info('Job launched')
