@@ -107,24 +107,24 @@ class MNLauncherWriter(SlurmLauncherWriter):
 
     def launcher_command(self):
         command = ['export PYTHONPATH=src']
-        command.append('export SINGULARITYENV_AWS_ACCESS_KEY_ID="$MINIO_ACCESS_KEY"')
-        command.append('export SINGULARITYENV_AWS_SECRET_ACCESS_KEY="$MINIO_SECRET_KEY"')
-        command.append('export SINGULARITYENV_MINIO_DOMAIN=https://localhost:9000')
-        command.append('export SINGULARITYENV_SSEC_KEY=$SSEC_KEY')
-        command.append('export SINGULARITYENV_ZIP_KEY=$ZIP_KEY')
+        command.append('export AWS_ACCESS_KEY_ID="$MINIO_ACCESS_KEY"')
+        command.append('export AWS_SECRET_ACCESS_KEY="$MINIO_SECRET_KEY"')
+        command.append('export MINIO_DOMAIN=https://localhost:9000')
+        command.append('export SSEC_KEY=$SSEC_KEY')
+        command.append('export ZIP_KEY=$ZIP_KEY')
         command.append('export CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA')
 
         # temp fix from support:
         command.append('unset TMPDIR')
 
 
-        SINGULARITY_PATH = '/apps/SINGULARITY/' + self.configuration['singularity_version'] + '/bin/singularity'
+        SINGULARITY_PATH = 'docker'
         SINGULARITY_BIND_PATH = '/gpfs/projects/bsc70/hpai/storage/data/:/gpfs/projects/bsc70/hpai/storage/data/'
         SINGULARITY_WRITABLE_PATH = self.configuration['containerdir']
         extra_flags = self.get_extra_singularity_flags()
-        SINGULARITY_COMMAND = SINGULARITY_PATH + ' exec ' + ' ' + extra_flags + '\\\n' + \
-                              ' -B ' + SINGULARITY_BIND_PATH + ' \\\n  --writable ' + \
-                              SINGULARITY_WRITABLE_PATH + ' \\\n  bash -c "' + self.python_command() + '"'
+        SINGULARITY_COMMAND = SINGULARITY_PATH + ' run ' + ' ' + extra_flags + '\\\n' + \
+                              ' -v ' + SINGULARITY_BIND_PATH + ':' + SINGULARITY_BIND_PATH + ':Z' + ' \\\n   ' + \
+                              ' \\\n ' + SINGULARITY_WRITABLE_PATH + ' bash -c "' + self.python_command() + '"'
 
         command.append(SINGULARITY_COMMAND)
 
@@ -133,7 +133,7 @@ class MNLauncherWriter(SlurmLauncherWriter):
         return command
 
     def get_extra_singularity_flags(self):
-        return ''
+        return '-d'
 
 
 class P9LauncherWriter(SlurmLauncherWriter):

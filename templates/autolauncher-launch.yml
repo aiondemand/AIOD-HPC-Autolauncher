@@ -4,6 +4,7 @@ variables:
     LAUNCH_TARGET_FOLDER: /gpfs/projects/bsc70/hpai/storage/data/tests/
     LAUNCH_TARGET_SSH_KEY: some_file
     LAUNCH_TARGET_SRC_DIR: src/
+    LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     LAUNCH_CONFIG_PATH: configs/config.json
     KNOWN_HOSTS_FILE: some_file
     SINGULARITY_VERSION: 3.6.4
@@ -30,7 +31,29 @@ launch:
       - job.pid
     expire_in: 1 week
   rules:
+    - if: '$LAUNCH_TARGET_HOSTNAME =~ /^mini.*$/'
+      when: never
     - if: '$CI_COMMIT_TITLE =~ /^LAUNCH.*$/'
+    - if: '$LAUNCH == "LAUNCH"'
+      when: on_success
+    - when: never
+
+launch_mini:
+  image: ci.atalaya.at/containers/docker:stable
+  stage: launch
+  script:
+    - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
+    - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
+    - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
+    - time apk add openssh-client rsync
+    - echo "Executing command env CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} PYTHONPATH=${JOB_WORKDIR}/${LAUNCH_TARGET_SRC_DIR} python ${JOB_WORKDIR}/autolauncher.py --file ${JOB_WORKDIR}/config.json --workdir ${JOB_WORKDIR} --containerdir ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/ --singularity-version ${SINGULARITY_VERSION}"
+    - env MINIO_ACCESS_KEY="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY="\"$MINIO_SECRET_KEY_CLEAN\"" CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} ZIP_KEY=$ZIP_KEY SSEC_KEY=$SSEC_KEY PYTHONPATH=${JOB_WORKDIR}/${LAUNCH_TARGET_SRC_DIR} python ${JOB_WORKDIR}/autolauncher.py --file ${JOB_WORKDIR}/config.json --workdir ${JOB_WORKDIR} --containerdir ${LAUNCH_IMAGE_NAME} > job.pid
+  artifacts:
+    paths:
+      - job.pid
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_TITLE =~ /^LAUNCH.*$/ && $LAUNCH_TARGET_HOSTNAME =~ /^mini.*$/'
     - if: '$LAUNCH == "LAUNCH"'
       when: on_success
     - when: never

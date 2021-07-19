@@ -58,6 +58,8 @@ transfer:
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
     - time scp -i /root/.ssh/ssh-key /tmp/autolauncher/autolauncher.py ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/autolauncher.py
   rules:
+    - if: '$LAUNCH_TARGET_HOSTNAME =~ /^mini.*$/'
+      when: never
     - if: '$CI_COMMIT_TITLE =~ /^LAUNCH.*$/'
       when: on_success
     - when: never
