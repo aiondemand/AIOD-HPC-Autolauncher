@@ -220,9 +220,9 @@ class MiniNLauncherWriter(LauncherWriter):
                               '-e CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA} ' + \
                               SINGULARITY_WRITABLE_PATH + ' bash -c ' + \
                               '"mkdir -p ' + self.configuration['workdir'] + '/output/ && ' + \
-                              self.python_command() + '" ' + \
-                              '> ' + self.configuration['output_filename'] + ' ' + \
-                              '2>' + self.configuration['error_filename']
+                              self.python_command() + \
+                              ' > ' + self.configuration['output_filename'] + '_out.txt ' + \
+                              '2>' + self.configuration['error_filename'] + '_err.txt"'
 
         command.append(SINGULARITY_COMMAND)
 
