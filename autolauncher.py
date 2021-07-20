@@ -218,7 +218,9 @@ class MiniNLauncherWriter(LauncherWriter):
                               '-e SSEC_KEY=${SSEC_KEY} ' + \
                               '-e ZIP_KEY=${ZIP_KEY} ' + \
                               '-e CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA} ' + \
-                              SINGULARITY_WRITABLE_PATH + ' bash -c "' + self.python_command() + '"'
+                              SINGULARITY_WRITABLE_PATH + ' bash -c "' + self.python_command() + '" ' + \
+                              '> ' + self.configuration['output_filename'] + ' ' + \
+                              '2>' + self.configuration['error_filename']
 
         command.append(SINGULARITY_COMMAND)
 
