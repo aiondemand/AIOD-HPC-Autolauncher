@@ -54,7 +54,7 @@ monitor_mini:
     - JOB_PID=`cat job.pid | tail -n 1 | egrep -o '[0-9a-f.]+' | tail -n 1 | cut -c 1-12`
     - echo "The job pid is $JOB_PID"
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
-    - env JOB_PID=${JOB_PID} JOB_WORKDIR=${JOB_WORKDIR} bash ${JOB_WORKDIR}/monitor_mini.sh
+    - env JOB_PID=${JOB_PID} JOB_WORKDIR=${JOB_WORKDIR} bash /tmp/autolauncher/monitor_mini.sh
     - cp ${JOB_WORKDIR}/output/*_${JOB_PID}_err.txt .
     - cp ${JOB_WORKDIR}/output/*_${JOB_PID}_out.txt .
     - 'cat *_out.txt'
