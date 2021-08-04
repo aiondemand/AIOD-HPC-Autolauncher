@@ -119,11 +119,14 @@ class MNLauncherWriter(SlurmLauncherWriter):
 
 
         SINGULARITY_PATH = '/apps/SINGULARITY/' + self.configuration['singularity_version'] + '/bin/singularity'
-        SINGULARITY_BIND_PATH = '/gpfs/projects/bsc70/hpai/storage/data/:/gpfs/projects/bsc70/hpai/storage/data/'
+        SINGULARITY_BINDINGS = ['/gpfs/projects/bsc70/hpai/storage/data/:/gpfs/projects/bsc70/hpai/storage/data/']
+        if self.configuration['bindings_list']:
+            SINGULARITY_BINDINGS += self.configuration['bindings_list']
+        SINGULARITY_BINDINGS_CMD = ''.join(" -B {}".format(bind) for bind in SINGULARITY_BINDINGS)
         SINGULARITY_WRITABLE_PATH = self.configuration['containerdir']
         extra_flags = self.get_extra_singularity_flags()
         SINGULARITY_COMMAND = SINGULARITY_PATH + ' exec ' + ' ' + extra_flags + '\\\n' + \
-                              ' -B ' + SINGULARITY_BIND_PATH + ' \\\n  --writable ' + \
+                              SINGULARITY_BINDINGS_CMD + ' \\\n  --writable ' + \
                               SINGULARITY_WRITABLE_PATH + ' \\\n  bash -c "' + self.python_command() + '"'
 
         command.append(SINGULARITY_COMMAND)
