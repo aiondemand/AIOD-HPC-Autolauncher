@@ -120,7 +120,7 @@ class MNLauncherWriter(SlurmLauncherWriter):
 
         SINGULARITY_PATH = '/apps/SINGULARITY/' + self.configuration['singularity_version'] + '/bin/singularity'
         SINGULARITY_BINDINGS = ['/gpfs/projects/bsc70/hpai/storage/data/:/gpfs/projects/bsc70/hpai/storage/data/']
-        if self.configuration['bindings_list']:
+        if 'bindings_list' in self.configuration:
             SINGULARITY_BINDINGS += self.configuration['bindings_list']
         SINGULARITY_BINDINGS_CMD = ''.join(" -B {}".format(bind) for bind in SINGULARITY_BINDINGS)
         SINGULARITY_WRITABLE_PATH = self.configuration['containerdir']
