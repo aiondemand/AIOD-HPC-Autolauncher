@@ -10,6 +10,7 @@ variables:
     SINGULARITY_VERSION: 3.6.4
     LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     LAUNCH_DESTINATION: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}
+    JOB_WORKDIR: ${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
 
 launch:
   image: ci.atalaya.at/containers/docker:stable
@@ -17,7 +18,6 @@ launch:
   script:
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
-    - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
     - time apk add openssh-client rsync
     - mkdir -p ~/.ssh/
     - cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
@@ -45,7 +45,6 @@ launch_mini:
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - time apk add rsync git bash python3
     - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
-    - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
     - echo "Executing command env CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} python3 /tmp/autolauncher/autolauncher.py --file ${LAUNCH_CONFIG_PATH} --workdir ${JOB_WORKDIR} -containerdir ci.atalaya.at/${LAUNCH_IMAGE_NAME}" 
     - env MINIO_ACCESS_KEY="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY="\"$MINIO_SECRET_KEY_CLEAN\"" CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} ZIP_KEY=$ZIP_KEY SSEC_KEY=$SSEC_KEY python3 /tmp/autolauncher/autolauncher.py --file ${LAUNCH_CONFIG_PATH} --workdir ${JOB_WORKDIR} --containerdir ci.atalaya.at/${LAUNCH_IMAGE_NAME} > job.pid

@@ -7,6 +7,7 @@ variables:
     KNOWN_HOSTS_FILE: some_file
     AUTOLAUNCHER_VERSION: main
     LAUNCH_DESTINATION: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}
+    JOB_WORKDIR: ${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
 
 monitor:
   image: ci.atalaya.at/containers/docker:stable
@@ -16,7 +17,6 @@ monitor:
   script:
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
-    - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
     - mkdir -p ~/.ssh/
     - cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
     - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
@@ -49,7 +49,6 @@ monitor_mini:
     - launch_mini
   script:
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
-    - export JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
     - apk add git python3 bash
     - JOB_PID=`cat job.pid | tail -n 1 | egrep -o '[0-9a-f.]+' | tail -n 1 | cut -c 1-12`
     - echo "The job pid is $JOB_PID"
