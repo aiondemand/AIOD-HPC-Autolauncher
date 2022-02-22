@@ -213,7 +213,7 @@ class MiniNLauncherWriter(LauncherWriter):
         SINGULARITY_BIND_PATH = '/gpfs/projects/bsc70/hpai/storage/data/:/gpfs/projects/bsc70/hpai/storage/data/'
         SINGULARITY_WRITABLE_PATH = self.configuration['containerdir']
         extra_flags = self.get_extra_singularity_flags()
-        SINGULARITY_COMMAND = SINGULARITY_PATH + ' run ' + ' ' + extra_flags + \
+        SINGULARITY_COMMAND = SINGULARITY_PATH + ' run ' + '--gpus all ' + extra_flags + \
                               ' -v ' + SINGULARITY_BIND_PATH + ':Z ' + \
                               '-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} ' + \
                               '-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} ' + \
