@@ -215,6 +215,7 @@ class MiniNLauncherWriter(LauncherWriter):
         extra_flags = self.get_extra_singularity_flags()
         SINGULARITY_COMMAND = SINGULARITY_PATH + ' run ' + '--gpus all ' + extra_flags + \
                               ' -v ' + SINGULARITY_BIND_PATH + ':Z ' + \
+                              ' -v /sys/class/powercap:/sys/class/powercap:ro ' + \
                               '-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} ' + \
                               '-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} ' + \
                               '-e MINIO_DOMAIN=${MINIO_DOMAIN} ' + \
