@@ -7,6 +7,7 @@ import argparse
 import json
 import logging
 import os
+import pprint
 import subprocess
 import sys
 from abc import abstractmethod
@@ -52,15 +53,13 @@ class LauncherWriter(object):
 
     def python_command(self):
         args = self.configuration.get('args', '')
-        python_command = self.configuration['binary'] + ' '
-        
-        if self.configuration['use_code_in_gpfs']:
-            python_command = python_command + self.configuration['workdir'] + '/'
-            
-        python_command = python_command + self.configuration['command'] + ' ' + args                 
-        
-        if self.configuration['add_commit_tag']:
-            python_command = python_command + ' --COMMIT_TAG ' + self.ctag()
+        command = \
+            f"{self.configuration['workdir']}/{self.configuration['command']}" \
+            if self.configuration['use_code_in_gpfs'] \
+            else f"{self.configuration['command']}"
+        commit_tag = f"--COMMIT_TAG {self.ctag()}" if self.configuration['add_commit_tag'] else ""
+
+        python_command = f"{self.configuration['binary']} {command} {args} {commit_tag}"
 
         return python_command
 
@@ -181,6 +180,39 @@ class AMDLauncher(MNLauncherWriter):
 
     def get_extra_singularity_flags(self):
         return '--rocm'
+
+    def launcher_command(self):
+        command = ['module load rocm singularity']
+        command.append('export PYTHONPATH=src')
+        command.append('export SINGULARITYENV_AWS_ACCESS_KEY_ID="$MINIO_ACCESS_KEY"')
+        command.append('export SINGULARITYENV_AWS_SECRET_ACCESS_KEY="$MINIO_SECRET_KEY"')
+        command.append('export SINGULARITYENV_MINIO_DOMAIN=https://localhost:9000')
+        command.append('export SINGULARITYENV_SSEC_KEY=$SSEC_KEY')
+        command.append('export SINGULARITYENV_ZIP_KEY=$ZIP_KEY')
+        command.append('export CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA')
+
+        # temp fix from support:
+        command.append('unset TMPDIR')
+
+        SINGULARITY_PATH = 'singularity'
+        SINGULARITY_BINDINGS = ['/gpfs/projects/bsc70/hpai/storage/data/:/gpfs/projects/bsc70/hpai/storage/data/']
+        if 'bindings_list' in self.configuration:
+            SINGULARITY_BINDINGS += self.configuration['bindings_list']
+        SINGULARITY_BINDINGS_CMD = ' '.join("-B {}".format(bind) for bind in SINGULARITY_BINDINGS)
+        SINGULARITY_WRITABLE_PATH = self.configuration['containerdir']
+        extra_flags = self.get_extra_singularity_flags()
+
+        SINGULARITY_COMMAND = \
+            f"{SINGULARITY_PATH} exec {extra_flags} \\\n" \
+            f" {SINGULARITY_BINDINGS_CMD} \\\n" \
+            f" --writable {SINGULARITY_WRITABLE_PATH} \\\n" \
+            f' bash -c "{self.python_command()}"'
+
+        command.append(SINGULARITY_COMMAND)
+
+        root.info('**LAUNCHING COMMAND** %s', str(command))
+
+        return command
 
 
 class MiniNLauncherWriter(LauncherWriter):
@@ -367,7 +399,7 @@ if __name__ == '__main__':
                         help='Add commit tag as an argument or not (by default: False)')
     parser.add_argument('-n', '--nolaunch',
                         help='Only create, do not launch')
-    parser.add_argument('-g', '--use-code-in-gpfs',
+    parser.add_argument('-g', '--use-code-in-gpfs', action='store_true',
                         help='Use code in the GPFS job workdir instead of looking for it inside the container (default: True')
 
     defaults = {'binary': 'python', 'singularity_version': '3.6.4', 'add_commit_tag': False, 'use_code_in_gpfs': True}
@@ -375,7 +407,7 @@ if __name__ == '__main__':
     with open(args.file) as f:
         args_dict = {k: v for k, v in vars(args).items() if v is not None}
         params = json.load(f)
-        defaults.update(params)
         defaults.update(args_dict)
-        print("Parameters: " + str(defaults))
+        defaults.update(params)
+        pprint.pprint(defaults)
         create_and_launch(defaults)

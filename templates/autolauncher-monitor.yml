@@ -22,10 +22,10 @@ monitor:
     - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
     - chmod 0600 /root/.ssh/ssh-key
     - apk add openssh-client git
-    - JOB_PID=`cat job.pid | grep Submitted | cut -d ' ' -f 11 | egrep -o '[0-9.]+'`
+    - JOB_PID=`cat autolauncher.out | grep Submitted | cut -d ' ' -f 11 | egrep -o '[0-9.]+'`
     - echo "The job pid is $JOB_PID"
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
-    - scp -i /root/.ssh/ssh-key /tmp/autolauncher/monitor.sh ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/
+    - scp -i /root/.ssh/ssh-key /tmp/autolauncher/monitor.sh ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/monitor.sh
     - ssh -i /root/.ssh/ssh-key -o ServerAliveInterval=60 ${LAUNCH_DESTINATION} env JOB_PID=${JOB_PID} JOB_WORKDIR=${JOB_WORKDIR} bash ${JOB_WORKDIR}/monitor.sh
     - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_err.txt .
     - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_out.txt .

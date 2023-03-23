@@ -26,7 +26,7 @@ transfer:
     - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
     - md5sum ~/.ssh/ssh-key
     - chmod 0600 /root/.ssh/ssh-key
-    - ssh -i /root/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} mkdir -p ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/
+    - ssh -i /root/.ssh/ssh-key -v ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} mkdir -v -p ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/
     - export LAUNCH_LAST_CONTAINER=$(ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}
       ls -tr ${LAUNCH_TARGET_FOLDER}/containers/ | head -n 1)
     - export KNOWN_HOSTS_CONTENT="$(cat /root/.ssh/known_hosts | base64)"
@@ -48,15 +48,15 @@ transfer:
       'mkdir -p /root/.ssh/ && echo ${KNOWN_HOSTS_CONTENT} | base64 -d > /root/.ssh/known_hosts && echo ${SSH_KEY_CONTENT} | base64 -d > /root/.ssh/ssh-key && chmod 0600 /root/.ssh/ssh-key &&
       singularity build --sandbox /tmp/container/ "docker://ci.atalaya.at/${LAUNCH_IMAGE_NAME}" &&
       apk add rsync openssh-client &&
-      rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key -o UserKnownHostsFile=/root/.ssh/known_hosts"
+      rsync -l -azuh --del -e "ssh -i /root/.ssh/ssh-key -o UserKnownHostsFile=/root/.ssh/known_hosts"
       --link-dest="${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_LAST_CONTAINER}/"
       /tmp/container/
       ${LAUNCH_DESTINATION}:"${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/"'
     - time ssh -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION} mkdir -p ${JOB_WORKDIR}/
-    - time rsync -azuh --del -e "ssh -i /root/.ssh/ssh-key" ${LAUNCH_TARGET_SRC_DIR} ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/${LAUNCH_TARGET_SRC_DIR}
-    - time scp -i /root/.ssh/ssh-key ${LAUNCH_CONFIG_PATH} ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/
-    - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
-    - time scp -i /root/.ssh/ssh-key /tmp/autolauncher/autolauncher.py ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/autolauncher.py
+    - time scp -i /root/.ssh/ssh-key ${LAUNCH_CONFIG_PATH} ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/${LAUNCH_CONFIG_PATH}
+#    - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
+#    - time scp -i /root/.ssh/ssh-key /tmp/autolauncher/autolauncher.py ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/autolauncher.py
+    - scp -i /root/.ssh/ssh-key autolauncher.py ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/autolauncher.py
   rules:
     - if: '$LAUNCH_TARGET_HOSTNAME =~ /^mini.*$/'
       when: never
