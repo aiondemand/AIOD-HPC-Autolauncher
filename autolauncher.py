@@ -387,6 +387,9 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--file',
                         help='Path to the json file with experiments parameters',
                         default='/gpfs/projects/bsc70/hpai/storage/data/{{CLUSTER_WORKING_DIR}}/dataset_preprocessing.json')
+    # ${CI_COMMIT_SHORT_SHA}
+    parser.add_argument('--commit',
+                        help='Git commit that is executing this code')
     parser.add_argument('-p', '--project',
                         help='Name of the project that a job is being launched for')
     parser.add_argument('-w', '--workdir',
