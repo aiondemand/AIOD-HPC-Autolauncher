@@ -7,7 +7,7 @@ variables:
     KNOWN_HOSTS_FILE: some_file
     AUTOLAUNCHER_VERSION: main
     LAUNCH_DESTINATION: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}
-    JOB_WORKDIR: ${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}/
+    JOB_WORKDIR: ${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}
 
 monitor:
   image: ci.atalaya.at/containers/docker:stable
