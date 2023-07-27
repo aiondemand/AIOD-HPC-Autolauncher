@@ -245,7 +245,7 @@ class MiniNLauncherWriter(LauncherWriter):
         SINGULARITY_BIND_PATH = '/gpfs/projects/bsc70/hpai/storage/data/:/gpfs/projects/bsc70/hpai/storage/data/'
         SINGULARITY_WRITABLE_PATH = self.configuration['containerdir']
         extra_flags = self.get_extra_singularity_flags()
-        SINGULARITY_COMMAND = SINGULARITY_PATH + ' run ' + '--gpus all ' + extra_flags + \
+        SINGULARITY_COMMAND = SINGULARITY_PATH + ' run ' + '--gpus all ' + extra_flags + ' ' + \
                               '--entrypoint "" ' + \
                               '-v ' + SINGULARITY_BIND_PATH + ':Z ' + \
                               '-v /sys/class/powercap:/sys/class/powercap:ro ' + \
