@@ -246,8 +246,9 @@ class MiniNLauncherWriter(LauncherWriter):
         SINGULARITY_WRITABLE_PATH = self.configuration['containerdir']
         extra_flags = self.get_extra_singularity_flags()
         SINGULARITY_COMMAND = SINGULARITY_PATH + ' run ' + '--gpus all ' + extra_flags + \
-                              ' -v ' + SINGULARITY_BIND_PATH + ':Z ' + \
-                              ' -v /sys/class/powercap:/sys/class/powercap:ro ' + \
+                              '--entrypoint "" ' + \
+                              '-v ' + SINGULARITY_BIND_PATH + ':Z ' + \
+                              '-v /sys/class/powercap:/sys/class/powercap:ro ' + \
                               '-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} ' + \
                               '-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} ' + \
                               '-e MINIO_DOMAIN=${MINIO_DOMAIN} ' + \
@@ -347,7 +348,7 @@ def launch_job(params):
             batch_cmd = 'bash ' + params['launcher_filepath']
         else:
             batch_cmd = 'sbatch ' + params['launcher_filepath']
-            
+
         batch_stdout = subprocess.check_output(batch_cmd, shell=True)
 
         root.info('Job launched')
