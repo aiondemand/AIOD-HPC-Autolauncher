@@ -54,12 +54,12 @@ monitor_mini:
     - echo "The job pid is $JOB_PID"
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
     - env JOB_PID=${JOB_PID} JOB_WORKDIR=${JOB_WORKDIR} bash /tmp/autolauncher/monitor_mini.sh
-    - mkdir /tmp/autolauncher-output
-    - docker cp -a ${JOB_PID}:${JOB_WORKDIR}/output /tmp/autolauncher-output
-    - 'cat /tmp/autolauncher-output/output/*_out.txt'
+    - mkdir autolauncher-output
+    - docker cp -a ${JOB_PID}:${JOB_WORKDIR}/output autolauncher-output
+    - 'cat autolauncher-output/output/*_out.txt'
   artifacts:
     paths:
-      - /tmp/autolauncher-output/output
+      - autolauncher-output/output
   rules:
     - if: '$CI_COMMIT_TITLE =~ /^LAUNCH.*$/ && $LAUNCH_TARGET_HOSTNAME =~ /^mini.*$/'
     - if: '$LAUNCH == "LAUNCH"'
