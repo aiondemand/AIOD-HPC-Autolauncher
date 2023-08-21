@@ -56,10 +56,10 @@ monitor_mini:
     - env JOB_PID=${JOB_PID} JOB_WORKDIR=${JOB_WORKDIR} bash /tmp/autolauncher/monitor_mini.sh
     - mkdir /tmp/autolauncher-output
     - docker cp -a ${JOB_PID}:${JOB_WORKDIR}/output /tmp/autolauncher-output
-    - 'cat /tmp/autolauncher-output/*_out.txt'
+    - 'cat /tmp/autolauncher-output/output/*_out.txt'
   artifacts:
     paths:
-      - /tmp/autolauncher-output
+      - /tmp/autolauncher-output/output
   rules:
     - if: '$CI_COMMIT_TITLE =~ /^LAUNCH.*$/ && $LAUNCH_TARGET_HOSTNAME =~ /^mini.*$/'
     - if: '$LAUNCH == "LAUNCH"'
