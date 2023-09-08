@@ -54,12 +54,12 @@ class LauncherWriter(object):
     def python_command(self):
         args = self.configuration.get('args', '')
         command = \
-            f"{self.configuration['workdir']}/{self.configuration['command']}" \
+            self.configuration['workdir'] + "/" + self.configuration['command'] \
             if self.configuration['use_code_in_gpfs'] \
-            else f"{self.configuration['command']}"
-        commit_tag = f"--COMMIT_TAG {self.ctag()}" if self.configuration['add_commit_tag'] else ""
+            else self.configuration['command']
+        commit_tag = "--COMMIT_TAG " + self.ctag() if self.configuration['add_commit_tag'] else ""
 
-        python_command = f"{self.configuration['binary']} {command} {args} {commit_tag}"
+        python_command = self.configuration['binary'] + " " + command + " " + args + " " + commit_tag
 
         return python_command
 
@@ -203,10 +203,10 @@ class AMDLauncher(MNLauncherWriter):
         extra_flags = self.get_extra_singularity_flags()
 
         SINGULARITY_COMMAND = \
-            f"{SINGULARITY_PATH} exec {extra_flags} \\\n" \
-            f" {SINGULARITY_BINDINGS_CMD} \\\n" \
-            f" --writable {SINGULARITY_WRITABLE_PATH} \\\n" \
-            f' bash -c "{self.python_command()}"'
+            SINGULARITY_PATH + " exec " + extra_flags + " \\\n" + \
+            " " + SINGULARITY_BINDINGS_CMD + " \\\n" + \
+            " --writable " + SINGULARITY_WRITABLE_PATH + " \\\n" + \
+            " bash -c \"" + self.python_command() + "\""
 
         command.append(SINGULARITY_COMMAND)
 
