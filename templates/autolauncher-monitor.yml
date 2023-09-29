@@ -27,13 +27,12 @@ monitor:
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
     - scp -i /root/.ssh/ssh-key /tmp/autolauncher/monitor.sh ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/monitor.sh
     - ssh -i /root/.ssh/ssh-key -o ServerAliveInterval=60 ${LAUNCH_DESTINATION} env JOB_PID=${JOB_PID} JOB_WORKDIR=${JOB_WORKDIR} bash ${JOB_WORKDIR}/monitor.sh
-    - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_err.txt .
-    - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_out.txt .
-    - 'cat *_out.txt'
+    - mkdir autolauncher-output
+    - scp -r -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output autolauncher-output/
+    - 'cat autolauncher-output/output/*_out.txt'
   artifacts:
     paths:
-      - "*_err.txt"
-      - "*_out.txt"
+      - autolauncher-output/output
   rules:
     - if: '$LAUNCH_TARGET_HOSTNAME =~ /^mini.*$/'
       when: never
