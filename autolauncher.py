@@ -258,8 +258,9 @@ class MiniNLauncherWriter(LauncherWriter):
                               SINGULARITY_WRITABLE_PATH + ' bash -c ' + \
                               '"mkdir -p ' + self.configuration['workdir'] + '/output/ && ' + \
                               self.python_command() + \
-                              ' > ' + self.configuration['output_filename'] + '_out.txt ' + \
-                              '2>' + self.configuration['error_filename'] + '_err.txt"'
+                              ' 2>' + self.configuration['error_filename'] + '_err.txt"' + \
+                              ' | tee ' + self.configuration['output_filename'] + '_out.txt '
+
 
         command.append(SINGULARITY_COMMAND)
 
