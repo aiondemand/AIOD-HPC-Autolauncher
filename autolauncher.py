@@ -59,7 +59,7 @@ class LauncherWriter(object):
             else self.configuration['command']
         commit_tag = "--COMMIT_TAG " + self.ctag() if self.configuration['add_commit_tag'] else ""
 
-        python_command = self.configuration['binary'] + " -u " + command + " " + args + " " + commit_tag
+        python_command = self.configuration['binary'] + " " + command + " " + args + " " + commit_tag
 
         return python_command
 
@@ -258,9 +258,8 @@ class MiniNLauncherWriter(LauncherWriter):
                               SINGULARITY_WRITABLE_PATH + ' bash -c ' + \
                               '"mkdir -p ' + self.configuration['workdir'] + '/output/ && ' + \
                               self.python_command() + \
-                              ' 2>' + self.configuration['error_filename'] + '_err.txt"' + \
-                              ' | tee ' + self.configuration['output_filename'] + '_out.txt '
-
+                              ' > ' + self.configuration['output_filename'] + '_out.txt ' + \
+                              '2>' + self.configuration['error_filename'] + '_err.txt"'
 
         command.append(SINGULARITY_COMMAND)
 
