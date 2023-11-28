@@ -33,7 +33,7 @@ transfer:
     - export SSH_KEY_CONTENT="$(cat /root/.ssh/ssh-key | base64)"
     - time docker run --rm --name ${LAUNCH_VERSION}
       -e SINGULARITY_DOCKER_USERNAME=gitlab-ci-token
-      -e SINGULARITY_DOCKER_PASSWORD=${CI_BUILD_TOKEN}
+      -e SINGULARITY_DOCKER_PASSWORD=${CI_JOB_TOKEN}
       -e LAUNCH_DESTINATION="${LAUNCH_DESTINATION}"
       -e LAUNCH_TARGET_FOLDER="${LAUNCH_TARGET_FOLDER}"
       -e LAUNCH_IMAGE_NAME="${LAUNCH_IMAGE_NAME}"

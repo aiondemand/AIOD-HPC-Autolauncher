@@ -12,7 +12,7 @@ build:
     - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
     - >-
       echo -e "[global]\ntimeout = 60\nindex-url = https://pypi.org/simple\ntrusted-host = pypi.org\n               hpai.bsc.es\nextra-index-url = https://${pypi_user}:${pypi_pass}@hpai.bsc.es:11080/simple/\n" > pip.conf
-    - docker login -u gitlab-ci-token -p ${CI_BUILD_TOKEN} ci.atalaya.at
+    - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ci.atalaya.at
     - docker build -t ci.atalaya.at/${LAUNCH_IMAGE_NAME} -f ${DOCKERFILE} .
     - docker push ci.atalaya.at/${LAUNCH_IMAGE_NAME}
   rules:
