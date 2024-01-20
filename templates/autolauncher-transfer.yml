@@ -16,6 +16,7 @@ transfer:
   image: ci.atalaya.at/containers/docker:stable
   stage: transfer
   script:
+    - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ci.atalaya.at
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
     - time apk add openssh-client rsync git bash

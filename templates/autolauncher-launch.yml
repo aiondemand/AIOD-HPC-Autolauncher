@@ -16,6 +16,7 @@ launch:
   image: ci.atalaya.at/containers/docker:stable
   stage: launch
   script:
+    - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ci.atalaya.at
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
     - time apk add openssh-client rsync
@@ -44,6 +45,7 @@ launch_mini:
   image: ci.atalaya.at/containers/docker:stable
   stage: launch
   script:
+    - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ci.atalaya.at
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - time apk add rsync git bash python3
     - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
