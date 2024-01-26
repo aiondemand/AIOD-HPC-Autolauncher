@@ -57,9 +57,9 @@ class LauncherWriter(object):
             self.configuration['workdir'] + "/" + self.configuration['command'] \
             if self.configuration['use_code_in_gpfs'] \
             else self.configuration['command']
-        commit_tag = "--COMMIT_TAG " + self.ctag() if self.configuration['add_commit_tag'] else ""
+        commit_tag = "commit_tag=" + self.ctag() if self.configuration['add_commit_tag'] else ""
 
-        python_command = self.configuration['binary'] + " " + command + " " + args + " " + commit_tag
+        python_command = self.configuration['binary'] + " -u " + command + " " + args + " " + commit_tag
 
         return python_command
 
@@ -261,6 +261,7 @@ class MiniNLauncherWriter(LauncherWriter):
                               ' > ' + self.configuration['output_filename'] + '_out.txt ' + \
                               '2>' + self.configuration['error_filename'] + '_err.txt"'
 
+
         command.append(SINGULARITY_COMMAND)
 
         root.info('**LAUNCHING COMMAND** %s', str(command))
@@ -268,9 +269,14 @@ class MiniNLauncherWriter(LauncherWriter):
         return command
 
     def get_extra_singularity_flags(self):
-        return '-d'
-
-
+        """
+        Launch the containes in non-detached mode for testing 
+        """
+        if any(test_module  in self.python_command() for test_module in ('pytest', 'unittest')):
+            return ''
+        else:
+            return '-d'
+        
 LAUNCHER_WRITERS = {'mn4': MNLauncherWriter,
                     'p9': P9LauncherWriter,
                     'local': MiniNLauncherWriter,
@@ -388,7 +394,10 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--file',
                         help='Path to the json file with experiments parameters',
                         default='/gpfs/projects/bsc70/hpai/storage/data/{{CLUSTER_WORKING_DIR}}/dataset_preprocessing.json')
-    # ${CI_COMMIT_SHORT_SHA}
+    parser.add_argument('--cluster',
+                        help='Machine where the job is launcehd')
+    parser.add_argument('--command',
+                        help='Script launched')
     parser.add_argument('--commit',
                         help='Git commit that is executing this code')
     parser.add_argument('-p', '--project',
