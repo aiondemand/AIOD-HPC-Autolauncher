@@ -11,12 +11,12 @@ variables:
     LAUNCH_DESTINATION: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     AUTOLAUNCHER_VERSION: main
+    TAGS: estufa # mininostrum, estufa or pepino
 
 transfer:
   image: ci.atalaya.at/containers/docker:stable
   stage: transfer
   script:
-    - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ci.atalaya.at
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
     - time apk add openssh-client rsync git bash
@@ -59,8 +59,7 @@ transfer:
     - time scp -i /root/.ssh/ssh-key /tmp/autolauncher/autolauncher.py ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/autolauncher.py
     - scp -i /root/.ssh/ssh-key /tmp/autolauncher/autolauncher.py ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/autolauncher.py
   rules:
-    - if: '$LAUNCH_TARGET_HOSTNAME =~ /^mini.*$/'
-      when: never
-    - if: '$CI_COMMIT_TITLE =~ /^LAUNCH.*$/'
-      when: on_success
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_AMD.*$/
     - when: never
+  tags: 
+    - ${TAGS}

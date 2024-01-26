@@ -1,6 +1,7 @@
 variables:
-    DOCKERFILE: Dockerfile
+    DOCKERFILE_TAG: ""
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
+    TAGS: estufa # mininostrum, estufa or pepino
 
 build:
   image: ci.atalaya.at/containers/docker:stable
@@ -13,8 +14,15 @@ build:
     - >-
       echo -e "[global]\ntimeout = 60\nindex-url = https://pypi.org/simple\ntrusted-host = pypi.org\n               hpai.bsc.es\nextra-index-url = https://${pypi_user}:${pypi_pass}@hpai.bsc.es:11080/simple/\n" > pip.conf
     - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ci.atalaya.at
-    - docker build -t ci.atalaya.at/${LAUNCH_IMAGE_NAME} -f ${DOCKERFILE} .
+    - docker build -t ci.atalaya.at/${LAUNCH_IMAGE_NAME} -f containers/Dockerfile-${LAUNCH_TARGET}${DOCKERFILE_TAG} .
     - docker push ci.atalaya.at/${LAUNCH_IMAGE_NAME}
   rules:
-    - when: always
-
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_AMD.*$/
+      variables:
+        LAUNCH_TARGET: amd
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_LOCAL.*$/
+      variables:
+        LAUNCH_TARGET: local
+    - when: never
+  tags: 
+    - ${TAGS}

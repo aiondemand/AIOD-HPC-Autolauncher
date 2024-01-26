@@ -8,12 +8,14 @@ variables:
     AUTOLAUNCHER_VERSION: main
     LAUNCH_DESTINATION: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}
     JOB_WORKDIR: ${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}
+    TAGS: estufa # mininostrum, estufa or pepino
 
-monitor:
+monitor_amd:
   image: ci.atalaya.at/containers/docker:stable
   stage: monitor
+  timeout: 15 hours
   dependencies:
-    - launch
+    - launch_amd
   script:
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
@@ -27,40 +29,53 @@ monitor:
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
     - scp -i /root/.ssh/ssh-key /tmp/autolauncher/monitor.sh ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/monitor.sh
     - ssh -i /root/.ssh/ssh-key -o ServerAliveInterval=60 ${LAUNCH_DESTINATION} env JOB_PID=${JOB_PID} JOB_WORKDIR=${JOB_WORKDIR} bash ${JOB_WORKDIR}/monitor.sh
-    - mkdir autolauncher-output
-    - scp -r -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output autolauncher-output/
-    - 'cat autolauncher-output/output/*_out.txt'
+    - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_err.txt .
+    - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_out.txt .
+    - 'cat *_out.txt'
   artifacts:
     paths:
-      - autolauncher-output/output
+      - "*_err.txt"
+      - "*_out.txt"
   rules:
-    - if: '$LAUNCH_TARGET_HOSTNAME =~ /^mini.*$/'
-      when: never
-    - if: '$CI_COMMIT_TITLE =~ /^LAUNCH.*$/'
-    - if: '$LAUNCH == "LAUNCH"'
-      when: on_success
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_AMD.*$/
     - when: never
+  tags: 
+    - ${TAGS}
 
-monitor_mini:
+monitor_local:
   image: ci.atalaya.at/containers/docker:stable
   stage: monitor
+  timeout: 15 hours
   dependencies:
-    - launch_mini
+    - launch_local
   script:
-    - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - apk add git python3 bash
+    - mkdir autolauncher-output
     - JOB_PID=`cat job.pid | tail -n 1 | egrep -o '[0-9a-f.]+' | tail -n 1 | cut -c 1-12`
     - echo "The job pid is $JOB_PID"
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
-    - env JOB_PID=${JOB_PID} JOB_WORKDIR=${JOB_WORKDIR} bash /tmp/autolauncher/monitor_mini.sh
-    - mkdir autolauncher-output
+    - touch logs
+    - | 
+        while true
+        do
+          docker cp -a ${JOB_PID}:${JOB_WORKDIR}/output autolauncher-output
+          out_file=$(ls autolauncher-output/output/*_out.txt )
+          comm -13 logs $out_file
+          cp $out_file logs
+          if [[ "$(docker ps | grep $JOB_PID)" == "" ]]; then          
+            comm -13 logs $out_file
+            exit 0
+          fi
+          sleep 30
+        done 
+
+    # create artifacts
     - docker cp -a ${JOB_PID}:${JOB_WORKDIR}/output autolauncher-output
-    - 'cat autolauncher-output/output/*_out.txt'
   artifacts:
     paths:
       - autolauncher-output/output
   rules:
-    - if: '$CI_COMMIT_TITLE =~ /^LAUNCH.*$/ && $LAUNCH_TARGET_HOSTNAME =~ /^mini.*$/'
-    - if: '$LAUNCH == "LAUNCH"'
-      when: on_success
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_LOCAL.*$/
     - when: never
+  tags: 
+    - ${TAGS}

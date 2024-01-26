@@ -273,7 +273,7 @@ class MiniNLauncherWriter(LauncherWriter):
 
 LAUNCHER_WRITERS = {'mn4': MNLauncherWriter,
                     'p9': P9LauncherWriter,
-                    'mini': MiniNLauncherWriter,
+                    'local': MiniNLauncherWriter,
                     'amd': AMDLauncher}
 
 
@@ -344,7 +344,7 @@ def launch_job(params):
     Submit the file launcher_filepath
     """
     try:
-        if params['cluster'] == 'mini':
+        if params['cluster'] == 'local':
             batch_cmd = 'bash ' + params['launcher_filepath']
         else:
             batch_cmd = 'sbatch ' + params['launcher_filepath']
