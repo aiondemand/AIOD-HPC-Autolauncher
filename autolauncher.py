@@ -59,7 +59,7 @@ class LauncherWriter(object):
             else self.configuration['command']
         commit_tag = "commit_tag=" + self.ctag() if self.configuration['add_commit_tag'] else ""
 
-        python_command = self.configuration['binary'] + " -u " + command + " " + args + " " + commit_tag
+        python_command = self.configuration['binary'] + " " + command + " " + args + " " + commit_tag
 
         return python_command
 
