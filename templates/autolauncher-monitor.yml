@@ -106,8 +106,7 @@ monitor_cesga:
     - wget http://bigdata.cesga.es/files/snx
     - chmod a+x snx
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
-    #- bash /tmp/autolauncher/utilities/cesga_vpn.sh $CESGA_USER $CESGA_PASSWORD
-    - bash cesga_vpn.sh $CESGA_USER $CESGA_PASSWORD
+    - bash /tmp/autolauncher/utilities/cesga_vpn.sh $CESGA_USER $CESGA_PASSWORD
 
     # --- SYNC & LAUNCH ---
     - JOB_WORKDIR=/mnt/lustre/scratch/nlsas/home/res/cns10/SHARE/pipelines/${CI_PROJECT_NAME}/${CI_COMMIT_SHORT_SHA}
