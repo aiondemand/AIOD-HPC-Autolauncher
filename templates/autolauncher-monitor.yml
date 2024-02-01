@@ -125,4 +125,4 @@ monitor_cesga:
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_CESGA_.*$/
     - when: never
   tags: 
-    - ${TAGS}
+    - cesga

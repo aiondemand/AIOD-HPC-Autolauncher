@@ -84,4 +84,4 @@ launch_cesga:
       - job.info
     expire_in: 1 week
   tags: 
-    - ${TAGS}
+    - cesga
