@@ -44,15 +44,15 @@ launch_amd:
   tags: 
     - ${TAGS}
 
+
 launch_cesga:
   image: ubuntu:22.04
   stage: launch
   script:
     - apt-get update
-    - apt-get install -y rsync bash python3 expect sshpass wget gpg lsb-release
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+    - apt-get install -y rsync bash python3 expect sshpass wget gpg lsb-release git vim
     - dpkg --add-architecture i386 && apt-get update && apt-get install -y bzip2 kmod libstdc++5:i386 libpam0g:i386 libx11-6:i386 expect iptables net-tools iputils-ping iproute2
-    - echo ${CI_PROJECT_NAME} ${GITLAB_USER_LOGIN}
-
     # --- CESGA credentials ---    
     - wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
     - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
@@ -73,9 +73,10 @@ launch_cesga:
     - JOBDIR=/mnt/lustre/scratch/nlsas/home/res/cns10/SHARE/pipelines/${CI_PROJECT_NAME}/${CI_COMMIT_SHORT_SHA}
     - WORKDIR=${JOBDIR}/code
     - OUTDIR=${JOBDIR}/output
-    - sshpass -p ${CESGA_PASSWORD} ssh ${CESGA_USER}@ft3.cesga.es "mkdir -p ${OUTDIR}/job && chmod g+w ${OUTDIR}/job && mkdir -p ${WORKDIR}  && chmod g+w ${WORKDIR}"
-    - sshpass -p ${CESGA_PASSWORD} rsync -avi --exclude .git/ -e ssh . ${CESGA_USER}@ft3.cesga.es:${WORKDIR}
-    - sshpass -p ${CESGA_PASSWORD} ssh ${CESGA_USER}@ft3.cesga.es "sbatch --output=${OUTDIR}/job/out --error=${OUTDIR}/job/err ${WORKDIR}/launch_cesga.sh ${OUTDIR} ${CI_COMMIT_SHORT_SHA} ${CESGA_USER}" > job.info
+    - LAUNCH_FILE=$(echo ${CI_COMMIT_TITLE} | sed 's/^[^@]*@//g' | sed 's/ .*//')
+    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no  $CESGA_USER@ft3.cesga.es "mkdir -p $OUTDIR/job && chmod g+w $OUTDIR/job && mkdir -p $WORKDIR  && chmod g+w $WORKDIR"
+    - sshpass -p $CESGA_PASSWORD rsync -avi --exclude .git/ -e "ssh -o StrictHostKeyChecking=no" . $CESGA_USER@ft3.cesga.es:$WORKDIR
+    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no $CESGA_USER@ft3.cesga.es "sbatch --output=$OUTDIR/job/out --error=$OUTDIR/job/err $WORKDIR/$LAUNCH_FILE $OUTDIR $CI_COMMIT_SHORT_SHA $CESGA_USER" > job.info
   rules:
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_CESGA.*$/
     - when: never
