@@ -44,24 +44,44 @@ launch_amd:
   tags: 
     - ${TAGS}
 
-launch_local:
-  image: ci.atalaya.at/containers/docker:stable
+launch_cesga:
+  image: ubuntu:22.04
   stage: launch
   script:
-    - apk add rsync git bash python3
-    - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
-    - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher  
-    - echo "Executing command env CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} python3 /tmp/autolauncher/autolauncher.py --command ${command} --cluster local --file ${LAUNCH_CONFIG_PATH}-updated --workdir ${JOB_WORKDIR} -containerdir ci.atalaya.at/${LAUNCH_IMAGE_NAME}" 
-    - env MINIO_ACCESS_KEY="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY="\"$MINIO_SECRET_KEY_CLEAN\"" CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} ZIP_KEY=$ZIP_KEY SSEC_KEY=$SSEC_KEY 
-      python3 /tmp/autolauncher/autolauncher.py
-      --cluster local --file ${LAUNCH_CONFIG_PATH} --workdir ${JOB_WORKDIR}/
-      --containerdir ci.atalaya.at/${LAUNCH_IMAGE_NAME} > job.pid
+    - apt-get update
+    - apt-get install -y rsync bash python3 expect sshpass wget gpg lsb-release
+    - dpkg --add-architecture i386 && apt-get update && apt-get install -y bzip2 kmod libstdc++5:i386 libpam0g:i386 libx11-6:i386 expect iptables net-tools iputils-ping iproute2
+    - echo ${CI_PROJECT_NAME} ${GITLAB_USER_LOGIN}
+
+    # --- CESGA credentials ---    
+    - wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+    - apt update && apt install vault
+    - apt-get install --reinstall -y vault
+    - export VAULT_ADDR=https://pass.hpai.bsc.es:18200
+    - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=$GITLAB_USER_LOGIN-read-only jwt=$CI_JOB_JWT)"
+    - CESGA_USER=$(vault kv get --field=CESGA_USER secret/gitlab-ci/cesga/$GITLAB_USER_LOGIN)
+    - CESGA_PASSWORD=$(vault kv get --field=CESGA_PASSWORD secret/gitlab-ci/cesga/${GITLAB_USER_LOGIN})
+
+    # --- VPN ---
+    - wget http://bigdata.cesga.es/files/snx
+    - chmod a+x snx
+    - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
+    - bash /tmp/autolauncher/utilities/cesga_vpn.sh $CESGA_USER $CESGA_PASSWORD
+
+    # --- SYNC & LAUNCH ---
+    - JOBDIR=/mnt/lustre/scratch/nlsas/home/res/cns10/SHARE/pipelines/${CI_PROJECT_NAME}/${CI_COMMIT_SHORT_SHA}
+    - WORKDIR=${JOBDIR}/code
+    - OUTDIR=${JOBDIR}/output
+    - sshpass -p ${CESGA_PASSWORD} ssh ${CESGA_USER}@ft3.cesga.es "mkdir -p ${OUTDIR}/job && chmod g+w ${OUTDIR}/job && mkdir -p ${WORKDIR}  && chmod g+w ${WORKDIR}"
+    - sshpass -p ${CESGA_PASSWORD} rsync -avi --exclude .git/ -e ssh . ${CESGA_USER}@ft3.cesga.es:${WORKDIR}
+    - sshpass -p ${CESGA_PASSWORD} ssh ${CESGA_USER}@ft3.cesga.es "sbatch --output=${OUTDIR}/job/out --error=${OUTDIR}/job/err ${WORKDIR}/launch_cesga.sh ${OUTDIR} ${CI_COMMIT_SHORT_SHA} ${CESGA_USER}" > job.info
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_CESGA.*$/
+    - when: never
   artifacts:
     paths:
-      - job.pid
+      - job.info
     expire_in: 1 week
-  rules:
-    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_LOCAL.*$/
-    - when: never
   tags: 
     - ${TAGS}

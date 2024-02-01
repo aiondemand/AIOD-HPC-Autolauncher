@@ -27,7 +27,7 @@ monitor_amd:
     - JOB_PID=`cat autolauncher.out | grep Submitted | cut -d ' ' -f 11 | egrep -o '[0-9.]+'`
     - echo "The job pid is $JOB_PID"
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
-    - scp -i /root/.ssh/ssh-key /tmp/autolauncher/monitor.sh ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/monitor.sh
+    - scp -i /root/.ssh/ssh-key /tmp/autolauncher/utilities/monitor.sh ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/monitor.sh
     - ssh -i /root/.ssh/ssh-key -o ServerAliveInterval=60 ${LAUNCH_DESTINATION} env JOB_PID=${JOB_PID} JOB_WORKDIR=${JOB_WORKDIR} bash ${JOB_WORKDIR}/monitor.sh
     - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_err.txt .
     - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_out.txt .
@@ -76,6 +76,53 @@ monitor_local:
       - autolauncher-output/output
   rules:
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_LOCAL.*$/
+    - when: never
+  tags: 
+    - ${TAGS}
+
+monitor_cesga:
+  image: ubuntu:22.04
+  stage: monitor
+  timeout: 15 hours
+  dependencies:
+    - launch_cesga
+  script:
+    - apt-get update
+    - apt-get install -y rsync bash python3 expect sshpass wget gpg lsb-release
+    - dpkg --add-architecture i386 && apt-get update && apt-get install -y bzip2 kmod libstdc++5:i386 libpam0g:i386 libx11-6:i386 expect iptables net-tools iputils-ping iproute2
+    - echo ${CI_PROJECT_NAME} ${GITLAB_USER_LOGIN}
+
+    # --- CESGA credentials ---    
+    - wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+    - apt update && apt install vault
+    - apt-get install --reinstall -y vault
+    - export VAULT_ADDR=https://pass.hpai.bsc.es:18200
+    - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=$GITLAB_USER_LOGIN-read-only jwt=$CI_JOB_JWT)"
+    - CESGA_USER=$(vault kv get --field=CESGA_USER secret/gitlab-ci/cesga/$GITLAB_USER_LOGIN)
+    - CESGA_PASSWORD=$(vault kv get --field=CESGA_PASSWORD secret/gitlab-ci/cesga/${GITLAB_USER_LOGIN})
+
+    # --- VPN ---
+    - wget http://bigdata.cesga.es/files/snx
+    - chmod a+x snx
+    - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
+    - bash /tmp/autolauncher/utilities/cesga_vpn.sh $CESGA_USER $CESGA_PASSWORD
+
+    # --- SYNC & LAUNCH ---
+    - JOBDIR=/mnt/lustre/scratch/nlsas/home/res/cns10/SHARE/pipelines/${CI_PROJECT_NAME}/${CI_COMMIT_SHORT_SHA}
+    - OUTDIR=${JOBDIR}/output
+    - JOB_PID=$(grep -Eo '[0-9]+' job.info)                                                                                    
+    - scp -i /root/.ssh/ssh-key /tmp/autolauncher/utilities/monitor.sh ${CESGA_USER}@ft3.cesga.es:${JOBDIR}/monitor.sh
+    - ssh -i /root/.ssh/ssh-key -o ServerAliveInterval=60 ${CESGA_USER}@ft3.cesga.es env JOB_PID=${JOB_PID} JOBDIR=${JOBDIR} bash ${JOBDIR}/monitor.sh
+    - scp -i /root/.ssh/ssh-key ${CESGA_USER}@ft3.cesga.es:${JOBDIR}/output/err.txt .
+    - scp -i /root/.ssh/ssh-key ${CESGA_USER}@ft3.cesga.es:${JOBDIR}/output/out.txt .
+    - 'cat *_out.txt'
+  artifacts:
+    paths:
+      - "*_err.txt"
+      - "*_out.txt"
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_CESGA_.*$/
     - when: never
   tags: 
     - ${TAGS}
