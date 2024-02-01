@@ -13,6 +13,7 @@ variables:
     JOB_WORKDIR: ${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}
     TAGS: estufa # mininostrum, estufa or pepino
 
+
 launch_amd:
   image: ci.atalaya.at/containers/docker:stable
   stage: launch
@@ -40,6 +41,29 @@ launch_amd:
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_AMD.*$/
+    - when: never
+  tags: 
+    - ${TAGS}
+
+
+launch_local:
+  image: ci.atalaya.at/containers/docker:stable
+  stage: launch
+  script:
+    - apk add rsync git bash python3
+    - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
+    - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher  
+    - echo "Executing command env CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} python3 /tmp/autolauncher/autolauncher.py --command ${command} --cluster local --file ${LAUNCH_CONFIG_PATH}-updated --workdir ${JOB_WORKDIR} -containerdir ci.atalaya.at/${LAUNCH_IMAGE_NAME}" 
+    - env MINIO_ACCESS_KEY="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY="\"$MINIO_SECRET_KEY_CLEAN\"" CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} ZIP_KEY=$ZIP_KEY SSEC_KEY=$SSEC_KEY 
+      python3 /tmp/autolauncher/autolauncher.py
+      --cluster mini --file ${LAUNCH_CONFIG_PATH} --workdir ${JOB_WORKDIR}/
+      --containerdir ci.atalaya.at/${LAUNCH_IMAGE_NAME} > job.pid
+  artifacts:
+    paths:
+      - job.pid
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_LOCAL.*$/
     - when: never
   tags: 
     - ${TAGS}
