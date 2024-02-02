@@ -70,36 +70,22 @@ launch_local:
 
 
 launch_cesga:
-  image: ubuntu:22.04
+  image: ci.atalaya.at/containers/cesga:0.0.6
   stage: launch
   script:
-    - apt-get update
-    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
-    - apt-get install -y rsync bash python3 expect sshpass wget gpg lsb-release git vim
-    - dpkg --add-architecture i386 && apt-get update && apt-get install -y bzip2 kmod libstdc++5:i386 libpam0g:i386 libx11-6:i386 expect iptables net-tools iputils-ping iproute2
-    # --- CESGA credentials ---    
-    - wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-    - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
-    - apt update && apt install vault
-    - apt-get install --reinstall -y vault
     - export VAULT_ADDR=https://pass.hpai.bsc.es:18200
     - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=$GITLAB_USER_LOGIN-read-only jwt=$CI_JOB_JWT)"
     - CESGA_USER=$(vault kv get --field=CESGA_USER secret/gitlab-ci/cesga/$GITLAB_USER_LOGIN)
     - CESGA_PASSWORD=$(vault kv get --field=CESGA_PASSWORD secret/gitlab-ci/cesga/${GITLAB_USER_LOGIN})
-
-    # --- VPN ---
-    - wget http://bigdata.cesga.es/files/snx
-    - chmod a+x snx
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
     - bash /tmp/autolauncher/utilities/cesga_vpn.sh $CESGA_USER $CESGA_PASSWORD
-
-    # --- SYNC & LAUNCH ---
-    - JOB_WORKDIR=/mnt/lustre/scratch/nlsas/home/res/cns10/SHARE/pipelines/${CI_PROJECT_NAME}/${CI_COMMIT_SHORT_SHA}
+    - PROJECT_DIR=/mnt/lustre/scratch/nlsas/home/res/cns10/SHARE/pipelines/${CI_PROJECT_NAME}
+    - JOB_WORKDIR=$PROJECT_DIR/${CI_COMMIT_SHORT_SHA}
     - LAUNCH_FILE=$(echo ${CI_COMMIT_TITLE} | sed 's/^[^@]*@//g' | sed 's/ .*//')
     - echo "[Info] Job directory -> $JOB_WORKDIR" && echo "[Info] Launching file -> $LAUNCH_FILE"
-    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no  $CESGA_USER@ft3.cesga.es "mkdir -p $JOB_WORKDIR/slurm_output"
-    - sshpass -p $CESGA_PASSWORD scp -r -o StrictHostKeyChecking=no code/* $CESGA_USER@ft3.cesga.es:$JOB_WORKDIR
-    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no $CESGA_USER@ft3.cesga.es "cd $JOB_WORKDIR && sbatch --output=slurm_output/out --error=slurm_output/err $LAUNCH_FILE $CI_COMMIT_SHORT_SHA $CESGA_USER" > job.info
+    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no  $CESGA_USER@ft3.cesga.es "mkdir -p $JOB_WORKDIR/slurm_output && chmod g+w $PROJECT_DIR"
+    - sshpass -p $CESGA_PASSWORD scp -o StrictHostKeyChecking=no code/* $CESGA_USER@ft3.cesga.es:$JOB_WORKDIR
+    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no $CESGA_USER@ft3.cesga.es "cd $JOB_WORKDIR && sbatch --output=slurm_output/out.txt --error=slurm_output/err.txt $LAUNCH_FILE $CI_COMMIT_SHORT_SHA $CESGA_USER" > job.info
   rules:
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_CESGA.*$/
     - when: never
