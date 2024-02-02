@@ -94,13 +94,12 @@ launch_cesga:
     - bash /tmp/autolauncher/utilities/cesga_vpn.sh $CESGA_USER $CESGA_PASSWORD
 
     # --- SYNC & LAUNCH ---
-    - JOBDIR=/mnt/lustre/scratch/nlsas/home/res/cns10/SHARE/pipelines/${CI_PROJECT_NAME}/${CI_COMMIT_SHORT_SHA}
-    - WORKDIR=${JOBDIR}/code
-    - OUTDIR=${JOBDIR}/output
+    - JOB_WORKDIR=/mnt/lustre/scratch/nlsas/home/res/cns10/SHARE/pipelines/${CI_PROJECT_NAME}/${CI_COMMIT_SHORT_SHA}
     - LAUNCH_FILE=$(echo ${CI_COMMIT_TITLE} | sed 's/^[^@]*@//g' | sed 's/ .*//')
-    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no  $CESGA_USER@ft3.cesga.es "mkdir -p $OUTDIR/job && chmod g+w $OUTDIR/job && mkdir -p $WORKDIR  && chmod g+w $WORKDIR"
-    - sshpass -p $CESGA_PASSWORD rsync -avi --exclude .git/ -e "ssh -o StrictHostKeyChecking=no" . $CESGA_USER@ft3.cesga.es:$WORKDIR
-    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no $CESGA_USER@ft3.cesga.es "sbatch --output=$OUTDIR/job/out --error=$OUTDIR/job/err $WORKDIR/$LAUNCH_FILE $OUTDIR $CI_COMMIT_SHORT_SHA $CESGA_USER" > job.info
+    - echo "[Info] Job directory -> $JOB_WORKDIR" && echo "[Info] Launching file -> $LAUNCH_FILE"
+    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no  $CESGA_USER@ft3.cesga.es "mkdir -p $JOB_WORKDIR/slurm_output"
+    - sshpass -p $CESGA_PASSWORD scp -o StrictHostKeyChecking=no code/* $CESGA_USER@ft3.cesga.es:$JOB_WORKDIR
+    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no $CESGA_USER@ft3.cesga.es "cd $JOB_WORKDIR && sbatch --output=slurm_output/out --error=slurm_output/err $LAUNCH_FILE $CI_COMMIT_SHORT_SHA $CESGA_USER" > job.info
   rules:
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_CESGA.*$/
     - when: never
