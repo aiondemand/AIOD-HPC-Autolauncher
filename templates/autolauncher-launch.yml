@@ -98,7 +98,7 @@ launch_cesga:
     - LAUNCH_FILE=$(echo ${CI_COMMIT_TITLE} | sed 's/^[^@]*@//g' | sed 's/ .*//')
     - echo "[Info] Job directory -> $JOB_WORKDIR" && echo "[Info] Launching file -> $LAUNCH_FILE"
     - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no  $CESGA_USER@ft3.cesga.es "mkdir -p $JOB_WORKDIR/slurm_output"
-    - sshpass -p $CESGA_PASSWORD scp -o StrictHostKeyChecking=no code/* $CESGA_USER@ft3.cesga.es:$JOB_WORKDIR
+    - sshpass -p $CESGA_PASSWORD scp -r -o StrictHostKeyChecking=no code/* $CESGA_USER@ft3.cesga.es:$JOB_WORKDIR
     - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no $CESGA_USER@ft3.cesga.es "cd $JOB_WORKDIR && sbatch --output=slurm_output/out --error=slurm_output/err $LAUNCH_FILE $CI_COMMIT_SHORT_SHA $CESGA_USER" > job.info
   rules:
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_CESGA.*$/
