@@ -81,11 +81,13 @@ launch_cesga:
     - bash /tmp/autolauncher/utilities/cesga_vpn.sh $CESGA_USER $CESGA_PASSWORD
     - PROJECT_DIR=/mnt/lustre/scratch/nlsas/home/res/cns10/SHARE/pipelines/${CI_PROJECT_NAME}
     - JOB_WORKDIR=$PROJECT_DIR/${CI_COMMIT_SHORT_SHA}
-    - LAUNCH_FILE=$(echo ${CI_COMMIT_TITLE} | sed 's/^[^@]*@//g' | sed 's/ .*//')
-    - echo "[Info] Job directory -> $JOB_WORKDIR" && echo "[Info] Launching file -> $LAUNCH_FILE"
+    - LAUNCH_COMMAND=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
+    - echo "[Info] Job directory -> $JOB_WORKDIR" && echo "[Info] Launching file -> $LAUNCH_COMMAND"
+    - test -f exclude_me.txt || touch exclude_me.txt
+    - cat /tmp/autolauncher/utilities/exclude_me.txt >> exclude_me.txt
     - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no  $CESGA_USER@ft3.cesga.es "mkdir -p $JOB_WORKDIR/slurm_output && chmod g+w $PROJECT_DIR"
-    - sshpass -p $CESGA_PASSWORD scp -o StrictHostKeyChecking=no code/* $CESGA_USER@ft3.cesga.es:$JOB_WORKDIR
-    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no $CESGA_USER@ft3.cesga.es "cd $JOB_WORKDIR && sbatch --output=slurm_output/out.txt --error=slurm_output/err.txt $LAUNCH_FILE $CI_COMMIT_SHORT_SHA $CESGA_USER" > job.info
+    - sshpass -p $CESGA_PASSWORD rsync -av --exclude-from=exclude_me.txt -e "ssh -o StrictHostKeyChecking=no" * $CESGA_USER@ft3.cesga.es:$JOB_WORKDIR
+    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no $CESGA_USER@ft3.cesga.es "cd $JOB_WORKDIR && $LAUNCH_COMMAND $CI_COMMIT_SHORT_SHA $CESGA_USER" > job.info
   rules:
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_CESGA.*$/
     - when: never
