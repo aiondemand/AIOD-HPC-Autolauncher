@@ -85,7 +85,7 @@ launch_cesga:
     - echo "[Info] Job directory -> $JOB_WORKDIR" && echo "[Info] Launching file -> $LAUNCH_COMMAND"
     - test -f exclude_me.txt || touch exclude_me.txt
     - cat /tmp/autolauncher/utilities/exclude_me.txt >> exclude_me.txt
-    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no  $CESGA_USER@ft3.cesga.es "mkdir -p $JOB_WORKDIR/slurm_output && chmod g+w $PROJECT_DIR"
+    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no  $CESGA_USER@ft3.cesga.es "if [ ! -d $PROJECT_DIR ]; then mkdir -p $PROJECT_DIR && chmod g+w $PROJECT_DIR; fi && mkdir -p $JOB_WORKDIR/slurm_output"
     - sshpass -p $CESGA_PASSWORD rsync -av --exclude-from=exclude_me.txt -e "ssh -o StrictHostKeyChecking=no" * $CESGA_USER@ft3.cesga.es:$JOB_WORKDIR
     - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no $CESGA_USER@ft3.cesga.es "export COMMIT_TAG=$CI_COMMIT_SHORT_SHA && export CESGA_USER=$CESGA_USER && cd $JOB_WORKDIR && $LAUNCH_COMMAND" > job.info
   rules:
