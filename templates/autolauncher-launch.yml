@@ -19,7 +19,6 @@ launch_amd:
   stage: launch
   variables:
     LAUNCH_TARGET_HOSTNAME: amdlogin.bsc.es
-    LAUNCH_TARGET_USERNAME:  hpai
   script:
     - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
     - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
