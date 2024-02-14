@@ -28,7 +28,7 @@ monitor_amd:
     - echo "The job pid is $JOB_PID"
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
     - scp -i /root/.ssh/ssh-key /tmp/autolauncher/utilities/monitor.sh ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/monitor.sh
-    - ssh -i /root/.ssh/ssh-key -o ServerAliveInterval=60 ${LAUNCH_DESTINATION} env JOB_PID=${JOB_PID} JOB_WORKDIR=${JOB_WORKDIR} bash ${JOB_WORKDIR}/monitor.sh
+    - ssh -i /root/.ssh/ssh-key -o ServerAliveInterval=60 ${LAUNCH_DESTINATION} env JOB_PID=${JOB_PID} OUT_FILE=${JOB_WORKDIR}/output/*_out.txt bash ${JOB_WORKDIR}/monitor.sh
     - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_err.txt .
     - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_out.txt .
     - 'cat *_out.txt'
@@ -93,12 +93,12 @@ monitor_cesga:
     - CESGA_USER=$(vault kv get --field=CESGA_USER secret/gitlab-ci/cesga/$GITLAB_USER_LOGIN)
     - CESGA_PASSWORD=$(vault kv get --field=CESGA_PASSWORD secret/gitlab-ci/cesga/${GITLAB_USER_LOGIN})
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
-    - bash /tmp/autolauncher/utilities/cesga_vpn.sh $CESGA_USER $CESGA_PASSWORD
+    - bash /tmp/autolauncher/utilities/cesga_vpn.sh ${CESGA_USER} ${CESGA_PASSWORD}
     - JOB_WORKDIR=/mnt/lustre/scratch/nlsas/home/res/cns10/SHARE/pipelines/${CI_PROJECT_NAME}/${CI_COMMIT_SHORT_SHA}
     - JOB_PID=$(grep -Eo '[0-9]+' job.info)   
-    - sshpass -p $CESGA_PASSWORD scp -o StrictHostKeyChecking=no /tmp/autolauncher/utilities/monitor_cesga.sh $CESGA_USER@ft3.cesga.es:$JOB_WORKDIR/monitor_cesga.sh
-    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 $CESGA_USER@ft3.cesga.es env JOB_PID=$JOB_PID OUT_FILE=$JOB_WORKDIR/slurm_output/out.txt bash $JOB_WORKDIR/monitor_cesga.sh
-    - sshpass -p $CESGA_PASSWORD scp -r -o StrictHostKeyChecking=no $CESGA_USER@ft3.cesga.es:$JOB_WORKDIR/slurm_output .
+    - sshpass -p ${CESGA_PASSWORD} scp -o StrictHostKeyChecking=no /tmp/autolauncher/utilities/monitor.sh ${CESGA_USER}@ft3.cesga.es:${JOB_WORKDIR}/monitor.sh
+    - sshpass -p ${CESGA_PASSWORD} ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 ${CESGA_USER}@ft3.cesga.es env JOB_PID=${JOB_PID} OUT_FILE=${JOB_WORKDIR}/slurm_output/out.txt bash ${JOB_WORKDIR}/monitor.sh
+    - sshpass -p ${CESGA_PASSWORD} scp -r -o StrictHostKeyChecking=no ${CESGA_USER}@ft3.cesga.es:${JOB_WORKDIR}/slurm_output .
     - cat slurm_output/out.txt
   artifacts:
     paths:
