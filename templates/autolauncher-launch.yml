@@ -77,16 +77,16 @@ launch_cesga:
     - CESGA_USER=$(vault kv get --field=CESGA_USER secret/gitlab-ci/cesga/$GITLAB_USER_LOGIN)
     - CESGA_PASSWORD=$(vault kv get --field=CESGA_PASSWORD secret/gitlab-ci/cesga/${GITLAB_USER_LOGIN})
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
-    - bash /tmp/autolauncher/utilities/cesga_vpn.sh $CESGA_USER $CESGA_PASSWORD
+    - bash /tmp/autolauncher/utilities/cesga_vpn.sh ${CESGA_USER} ${CESGA_PASSWORD}
     - PROJECT_DIR=/mnt/lustre/scratch/nlsas/home/res/cns10/SHARE/pipelines/${CI_PROJECT_NAME}
     - JOB_WORKDIR=$PROJECT_DIR/${CI_COMMIT_SHORT_SHA}
     - LAUNCH_COMMAND=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
-    - echo "[Info] Job directory -> $JOB_WORKDIR" && echo "[Info] Launching file -> $LAUNCH_COMMAND"
+    - echo "[Info] Job directory -> $JOB_WORKDIR" && echo "[Info] Launching file -> ${LAUNCH_COMMAND}"
     - test -f exclude_me.txt || touch exclude_me.txt
     - cat /tmp/autolauncher/utilities/exclude_me.txt >> exclude_me.txt
-    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no  $CESGA_USER@ft3.cesga.es "if [ ! -d $PROJECT_DIR ]; then mkdir -p $PROJECT_DIR && chmod g+w $PROJECT_DIR; fi && mkdir -p $JOB_WORKDIR/slurm_output && chmod g+w $JOB_WORKDIR"
-    - sshpass -p $CESGA_PASSWORD rsync -av --exclude-from=exclude_me.txt -e "ssh -o StrictHostKeyChecking=no" * $CESGA_USER@ft3.cesga.es:$JOB_WORKDIR
-    - sshpass -p $CESGA_PASSWORD ssh -o StrictHostKeyChecking=no $CESGA_USER@ft3.cesga.es "export COMMIT_TAG=$CI_COMMIT_SHORT_SHA && export CESGA_USER=$CESGA_USER && cd $JOB_WORKDIR && $LAUNCH_COMMAND" > job.info
+    - sshpass -p ${CESGA_PASSWORD} ssh -o StrictHostKeyChecking=no  ${CESGA_USER}@ft3.cesga.es "if [ ! -d ${PROJECT_DIR} ]; then mkdir -p ${PROJECT_DIR} && chmod g+w ${PROJECT_DIR}; fi && mkdir -p ${JOB_WORKDIR}/slurm_output && chmod g+w ${JOB_WORKDIR}"
+    - sshpass -p ${CESGA_PASSWORD} rsync -av --exclude-from=exclude_me.txt -e "ssh -o StrictHostKeyChecking=no" * ${CESGA_USER}@ft3.cesga.es:${JOB_WORKDIR}
+    - sshpass -p ${CESGA_PASSWORD} ssh -o StrictHostKeyChecking=no ${CESGA_USER}@ft3.cesga.es "export COMMIT_TAG=${CI_COMMIT_SHORT_SHA} && export USER=${CESGA_USER} && cd ${JOB_WORKDIR} && ${LAUNCH_COMMAND}" > job.info
   rules:
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_CESGA.*$/
     - when: never
