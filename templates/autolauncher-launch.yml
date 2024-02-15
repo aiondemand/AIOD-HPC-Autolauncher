@@ -124,8 +124,9 @@ launch_leonardo:
     - rsync -av --exclude-from=exclude_me.txt -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/leonardo-key" * ${LEONARDO_USER}@login.leonardo.cineca.it:$JOB_WORKDIR
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/leonardo-key ${LEONARDO_USER}@login.leonardo.cineca.it "export COMMIT_TAG=${CI_COMMIT_SHORT_SHA} && cd ${JOB_WORKDIR} && ${LAUNCH_COMMAND}" > job.info
   rules:
-    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_LEONARDO.*$/
+    - if: $KEY == null && $CI_COMMIT_TITLE =~ /^LAUNCH_LEONARDO.*$/
       when: manual
+    - if: $KEY != null && $CI_COMMIT_TITLE =~ /^LAUNCH_LEONARDO.*$/
     - when: never
   artifacts:
     paths:

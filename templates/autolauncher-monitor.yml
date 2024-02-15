@@ -138,8 +138,9 @@ monitor_leonardo:
     paths:
       - slurm_output
   rules:
-    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_LEONARDO.*$/
+    - if: $KEY == null && $CI_COMMIT_TITLE =~ /^LAUNCH_LEONARDO.*$/
       when: manual
+    - if: $KEY != null && $CI_COMMIT_TITLE =~ /^LAUNCH_LEONARDO.*$/
     - when: never
   needs:
     - job: launch_leonardo
