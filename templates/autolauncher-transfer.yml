@@ -60,6 +60,7 @@ transfer:
     - scp -i /root/.ssh/ssh-key /tmp/autolauncher/autolauncher.py ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/autolauncher.py
   rules:
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_AMD.*$/
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_MN4.*$/
     - when: never
   tags: 
     - ${TAGS}

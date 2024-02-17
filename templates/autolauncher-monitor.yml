@@ -10,6 +10,38 @@ variables:
     JOB_WORKDIR: ${LAUNCH_TARGET_FOLDER}/jobs/${LAUNCH_VERSION}
     TAGS: estufa # mininostrum, estufa or pepino
 
+monitor_mn4:
+  image: ci.atalaya.at/containers/docker:stable
+  stage: monitor
+  timeout: 15 hours
+  dependencies:
+    - launch_mn4
+  script:
+    - 'echo "Target server: ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}"'
+    - 'echo "SSH key path: ${LAUNCH_TARGET_SSH_KEY}"'
+    - mkdir -p ~/.ssh/
+    - cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
+    - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
+    - chmod 0600 /root/.ssh/ssh-key
+    - apk add openssh-client git
+    - JOB_PID=`cat autolauncher.out | grep Submitted | cut -d ' ' -f 11 | egrep -o '[0-9.]+'`
+    - echo "The job pid is $JOB_PID"
+    - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
+    - scp -i /root/.ssh/ssh-key /tmp/autolauncher/utilities/monitor.sh ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/monitor.sh
+    - ssh -i /root/.ssh/ssh-key -o ServerAliveInterval=60 ${LAUNCH_DESTINATION} env JOB_PID=${JOB_PID} OUT_FILE=${JOB_WORKDIR}/output/*_out.txt bash ${JOB_WORKDIR}/monitor.sh
+    - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_err.txt .
+    - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_out.txt .
+    - 'cat *_out.txt'
+  artifacts:
+    paths:
+      - "*_err.txt"
+      - "*_out.txt"
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_MN4.*$/
+    - when: never
+  tags: 
+    - ${TAGS}
+
 monitor_amd:
   image: ci.atalaya.at/containers/docker:stable
   stage: monitor

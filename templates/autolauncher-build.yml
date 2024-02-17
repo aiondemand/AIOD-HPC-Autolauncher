@@ -20,6 +20,9 @@ build:
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_AMD.*$/
       variables:
         LAUNCH_TARGET: amd
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_MN4.*$/
+      variables:
+        LAUNCH_TARGET: mn4
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_LOCAL.*$/
       variables:
         LAUNCH_TARGET: local
