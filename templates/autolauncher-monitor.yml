@@ -31,7 +31,7 @@ monitor_mn4:
     - ssh -i /root/.ssh/ssh-key -o ServerAliveInterval=60 ${LAUNCH_DESTINATION} env JOB_PID=${JOB_PID} OUT_FILE=${JOB_WORKDIR}/output/*_out.txt bash ${JOB_WORKDIR}/monitor.sh
     - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_err.txt .
     - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_out.txt .
-    - 'cat *_out.txt'
+    - 'tail -n 50 *_out.txt'
   artifacts:
     paths:
       - "*_err.txt"
@@ -63,7 +63,7 @@ monitor_amd:
     - ssh -i /root/.ssh/ssh-key -o ServerAliveInterval=60 ${LAUNCH_DESTINATION} env JOB_PID=${JOB_PID} OUT_FILE=${JOB_WORKDIR}/output/*_out.txt bash ${JOB_WORKDIR}/monitor.sh
     - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_err.txt .
     - scp -i /root/.ssh/ssh-key ${LAUNCH_DESTINATION}:${JOB_WORKDIR}/output/*_${JOB_PID}_out.txt .
-    - 'cat *_out.txt'
+    - 'tail -n 50 *_out.txt'
   artifacts:
     paths:
       - "*_err.txt"
