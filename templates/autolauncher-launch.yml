@@ -85,7 +85,7 @@ launch_local:
     - echo "Executing command env CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} python3 /tmp/autolauncher/autolauncher.py --command ${command} --cluster local --file ${LAUNCH_CONFIG_PATH}-updated --workdir ${JOB_WORKDIR} -containerdir ci.atalaya.at/${LAUNCH_IMAGE_NAME}" 
     - env MINIO_ACCESS_KEY="$MINIO_ACCESS_KEY" MINIO_SECRET_KEY="\"$MINIO_SECRET_KEY_CLEAN\"" CI_PROJECT_PATH_SLUG=$CI_PROJECT_PATH_SLUG CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} ZIP_KEY=$ZIP_KEY SSEC_KEY=$SSEC_KEY 
       python3 /tmp/autolauncher/autolauncher.py
-      --cluster mini --file ${LAUNCH_CONFIG_PATH} --workdir ${JOB_WORKDIR}/
+      --cluster local --file ${LAUNCH_CONFIG_PATH} --workdir ${JOB_WORKDIR}/
       --containerdir ci.atalaya.at/${LAUNCH_IMAGE_NAME} > job.pid
   artifacts:
     paths:
