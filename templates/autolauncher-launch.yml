@@ -97,6 +97,37 @@ launch_local:
   tags: 
     - ${TAGS}
 
+launch_mn5:
+  image: ci.atalaya.at/containers/cesga:0.0.6
+  stage: launch
+  script:
+    - export VAULT_ADDR=https://pass.hpai.bsc.es:18200
+    - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=$GITLAB_USER_LOGIN-read-only jwt=$CI_JOB_JWT)"
+    - USER=$(vault kv get --field=MN5_USER secret/gitlab-ci/mn5/${GITLAB_USER_LOGIN})
+    - PASSWORD=$(vault kv get --field=MN5_PASSWORD secret/gitlab-ci/mn5/${GITLAB_USER_LOGIN})
+    - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
+    - PROJECT_DIR=/gpfs/projects/bsc70/pipelines/${CI_PROJECT_NAME}
+    - JOB_WORKDIR=${PROJECT_DIR}/${CI_COMMIT_SHORT_SHA}
+    - LAUNCH_COMMAND=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
+    - echo "[Info] Job directory -> ${JOB_WORKDIR}" && echo "[Info] Launching file -> ${LAUNCH_COMMAND}"
+    - test -f exclude_me.txt || touch exclude_me.txt
+    - cat /tmp/autolauncher/utilities/exclude_me.txt >> exclude_me.txt
+    - sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no  ${USER}@${LAUNCH_TARGET_HOSTNAME} "if [ ! -d ${PROJECT_DIR} ]; then mkdir -p ${PROJECT_DIR} && chmod g+w ${PROJECT_DIR}; fi && mkdir -p ${JOB_WORKDIR}/slurm_output && chmod g+w ${JOB_WORKDIR}"
+    - sshpass -p ${PASSWORD} rsync -av --exclude-from=exclude_me.txt -e "ssh -o StrictHostKeyChecking=no" * ${USER}@${LAUNCH_TARGET_HOSTNAME}:${JOB_WORKDIR}
+    - sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no ${USER}@${LAUNCH_TARGET_HOSTNAME} "export COMMIT_TAG=${CI_COMMIT_SHORT_SHA} && cd ${JOB_WORKDIR} && ${LAUNCH_COMMAND}" > job.info
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_MN5_GPP.*$/
+      variables: 
+        LAUNCH_TARGET_HOSTNAME: glogin1.bsc.es
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_MN5_ACC.*$/
+      variables: 
+        LAUNCH_TARGET_HOSTNAME: alogin1.bsc.es
+    - when: never
+  artifacts:
+    paths:
+      - job.info
+    expire_in: 1 week
+
 
 launch_cesga:
   image: ci.atalaya.at/containers/cesga:0.0.6

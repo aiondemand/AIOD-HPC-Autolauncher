@@ -113,6 +113,34 @@ monitor_local:
     - ${TAGS}
 
 
+monitor_mn5:
+  image: ci.atalaya.at/containers/cesga:0.0.6
+  stage: monitor
+  timeout: 15 hours
+  dependencies:
+    - launch_mn5
+  script:
+    - export VAULT_ADDR=https://pass.hpai.bsc.es:18200
+    - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=$GITLAB_USER_LOGIN-read-only jwt=$CI_JOB_JWT)"
+    - USER=$(vault kv get --field=MN5_USER secret/gitlab-ci/mn5/${GITLAB_USER_LOGIN})
+    - PASSWORD=$(vault kv get --field=MN5_PASSWORD secret/gitlab-ci/mn5/${GITLAB_USER_LOGIN})
+    - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
+    - PROJECT_DIR=/gpfs/projects/bsc70/pipelines/${CI_PROJECT_NAME}
+    - JOB_WORKDIR=${PROJECT_DIR}/${CI_COMMIT_SHORT_SHA}
+    - JOB_PID=$(grep -Eo '[0-9]+' job.info)   
+    - sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no /tmp/autolauncher/utilities/monitor.sh ${USER}@${LAUNCH_TARGET_HOSTNAME}:${JOB_WORKDIR}/monitor.sh
+    - sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 ${USER}@${LAUNCH_TARGET_HOSTNAME} env JOB_PID=${JOB_PID} OUT_FILE=${JOB_WORKDIR}/slurm_output/out.txt bash ${JOB_WORKDIR}/monitor.sh
+    - sshpass -p ${PASSWORD} scp -r -o StrictHostKeyChecking=no ${USER}@${LAUNCH_TARGET_HOSTNAME}:${JOB_WORKDIR}/slurm_output .
+    - cat slurm_output/out.txt
+  artifacts:
+    paths:
+      - slurm_output
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^LAUNCH_MN5.*$/
+      variables: 
+        LAUNCH_TARGET_HOSTNAME: glogin1.bsc.es
+    - when: never
+
 monitor_cesga:
   image: ci.atalaya.at/containers/cesga:0.0.6
   stage: monitor
