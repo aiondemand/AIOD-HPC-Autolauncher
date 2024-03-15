@@ -140,6 +140,8 @@ monitor_mn5:
       variables: 
         LAUNCH_TARGET_HOSTNAME: glogin1.bsc.es
     - when: never
+  tags: 
+    - ${TAGS}
 
 monitor_cesga:
   image: ci.atalaya.at/containers/cesga:0.0.6

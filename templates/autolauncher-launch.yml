@@ -127,6 +127,8 @@ launch_mn5:
     paths:
       - job.info
     expire_in: 1 week
+  tags: 
+    - ${TAGS}
 
 
 launch_cesga:
