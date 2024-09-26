@@ -1,7 +1,3 @@
-stages:
-  - build
-  - build_mn5
-
 variables:
     DOCKERFILE_TAG: ""
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
