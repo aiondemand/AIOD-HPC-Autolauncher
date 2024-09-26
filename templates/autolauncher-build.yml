@@ -29,3 +29,42 @@ build:
     - when: never
   tags: 
     - ${TAGS}
+
+# Nuevo stage para construir la imagen Singularity y ejecutar el despliegue
+build_mn5:
+  image: ci.atalaya.at/containers/docker:stable  # Imagen base estable
+  stage: build_mn5  # Nueva etapa para construir Singularity
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    # Paso 1: Conectar con estufa
+    
+
+    # Paso 2: Descargar la imagen base NVIDIA con PyTorch y construir Singularity
+    #  - Descargar la imagen de NVIDIA
+    - docker pull nvcr.io/nvidia/pytorch:24.02-py3
+    #  - Usar Singularity para crear un sandbox
+    - singularity build --sandbox ${SINGULARITY_IMAGE_PATH} docker://nvcr.io/nvidia/pytorch:24.02-py3
+
+    # Paso 3: Ejecutar el script de modificaciones de la imagen base
+    #  - Aquí realizarás las modificaciones que necesites (instalación de paquetes, etc.)
+    - bash image.sh
+
+    # Paso 4: Guardar logs y estado actual de la imagen
+    - singularity exec ${SINGULARITY_IMAGE_PATH} pip freeze > pip_freeze.txt
+    - singularity exec ${SINGULARITY_IMAGE_PATH} dpkg -l > installed_packages.txt
+    - cp pip_freeze.txt installed_packages.txt logs/singularity_build.log .
+  after_script:
+    # Guardar los artefactos (pip freeze, logs, def file)
+    - mv pip_freeze.txt logs/
+    - mv installed_packages.txt logs/
+  artifacts:
+    paths:
+      - logs/
+    expire_in: 1 week  # Mantén los artefactos por una semana
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^BUILD_MN5.*$/
+      variables:
+          LAUNCH_TARGET: estufa
+  tags:
+    - ${TAGS} # Utiliza solo los runners de OpenStack
