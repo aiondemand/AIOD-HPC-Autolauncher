@@ -65,6 +65,6 @@ build_mn5:
   rules:
     - if: $CI_COMMIT_TITLE =~ /^BUILD_MN5.*$/
       variables:
-          LAUNCH_TARGET: estufa
+          LAUNCH_TARGET: local
   tags:
     - ${TAGS} # Utiliza solo los runners de OpenStack
