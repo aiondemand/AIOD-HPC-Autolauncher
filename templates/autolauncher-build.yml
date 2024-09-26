@@ -1,11 +1,11 @@
+stages:
+  - build
+  - build_mn5
+
 variables:
     DOCKERFILE_TAG: ""
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     TAGS: estufa # mininostrum, estufa or pepino
-
-stages:
-  - build
-  - build_mn5
 
 build:
   image: ci.atalaya.at/containers/docker:stable
