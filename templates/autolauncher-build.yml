@@ -1,7 +1,15 @@
 variables:
-    BUILD_IMAGE_NAME: ""
-    DOCKERFILE_TAG: ""
+    LAUNCH_TARGET_HOSTNAME: amdlogin.bsc.es
+    LAUNCH_TARGET_USERNAME: hpai
+    LAUNCH_TARGET_FOLDER: /gpfs/projects/bsc70/hpai/storage/data/tests/
+    LAUNCH_TARGET_SSH_KEY: some_file
+    LAUNCH_TARGET_SRC_DIR: src/
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
+    LAUNCH_CONFIG_PATH: configs/config.json
+    KNOWN_HOSTS_FILE: some_file
+    SINGULARITY_VERSION: 3.6.4
+    LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
+    BUILD_IMAGE_NAME: nvcr.io/nvidia/pytorch:24.02-py3
     TAGS: estufa # mininostrum, estufa or pepino
 
 build:
@@ -31,42 +39,53 @@ build:
   tags: 
     - ${TAGS}
 
-# Nuevo stage para construir la imagen Singularity y ejecutar el despliegue
 build_image_mn5:
-  image: ci.atalaya.at/containers/docker:stable  # Imagen base estable
-  stage: build_mn5  # Nueva etapa para construir Singularity
+  image: ci.atalaya.at/containers/docker:stable  # Stable base image
+  stage: build_image_mn5  # New stage for building Singularity image
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
-    - time apk add bash
+    - time apk add bash openssh-client rsync git
+    # Capture the image from the commit message
+    - export BUILD_IMAGE_NAME=$(echo "$CI_COMMIT_MESSAGE" | grep -oP '(?<=--image=)[^ ]+')
+    - echo "The new image is: $BUILD_IMAGE_NAME"
+    # Set up SSH keys for connecting to the remote server
+    - mkdir -p ~/.ssh/
+    - cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
+    - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
+    - chmod 0600 ~/.ssh/ssh-key
+    - md5sum ~/.ssh/ssh-key  # Verify key integrity
   script:
-    # Paso 1: Conectar con cluster
-    - 
+    # Step 1: Connect to the remote server and prepare the environment
+    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "mkdir -p ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/"
+    
+    # Step 2: Pull the Docker image on the remote server
+    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "docker pull ${BUILD_IMAGE_NAME}"
 
-    # Paso 2: Descargar la imagen base y construir la imagen de Singularity
-    #  - Descargar la imagen de NVIDIA
-    - docker pull ${BUILD_IMAGE_NAME}
-    #  - Usar Singularity para crear un sandbox
-    - singularity build --sandbox ${SINGULARITY_IMAGE_PATH} docker://${BUILD_IMAGE_NAME}
+    # Step 3: Build the Singularity image in sandbox mode
+    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "singularity build --sandbox ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/ docker://${BUILD_IMAGE_NAME}"
 
-    # Paso 3: Ejecutar el script de modificaciones de la imagen base
-    #  - Aquí realizarás las modificaciones que necesites (instalación de paquetes, etc.)
-    - bash image.sh
+    # Step 4: Enter the Singularity sandbox and launch a writable shell
+    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "cd ${LAUNCH_TARGET_FOLDER}/singdir && singularity shell --writable --nv ."
 
-    # Paso 4: Guardar logs y estado actual de la imagen
-    - singularity exec ${SINGULARITY_IMAGE_PATH} pip freeze > pip_freeze.txt
-    - singularity exec ${SINGULARITY_IMAGE_PATH} dpkg -l > installed_packages.txt
-    - cp pip_freeze.txt installed_packages.txt logs/singularity_build.log .
+    # Step 5: Run the image.sh script to install additional dependencies inside the sandbox
+    - scp -i ~/.ssh/ssh-key image.sh ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}:${LAUNCH_TARGET_FOLDER}/singdir/image.sh
+    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "cd ${LAUNCH_TARGET_FOLDER}/singdir && bash image.sh"
+    
+    # Step 6: Save logs on the remote server
+    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "singularity exec ${LAUNCH_TARGET_FOLDER}/singdir pip freeze > pip_freeze.txt"
+    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "singularity exec ${LAUNCH_TARGET_FOLDER}/singdir dpkg -l > installed_packages.txt"
+    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "mkdir -p ${LAUNCH_TARGET_FOLDER}/logs && cp pip_freeze.txt installed_packages.txt ${LAUNCH_TARGET_FOLDER}/logs/"
   after_script:
-    # Guardar los artefactos (pip freeze, logs, def file)
-    - mv pip_freeze.txt logs/
-    - mv installed_packages.txt logs/
+    # Fetch logs and artifacts from the remote server
+    - scp -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}:${LAUNCH_TARGET_FOLDER}/logs/pip_freeze.txt logs/
+    - scp -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}:${LAUNCH_TARGET_FOLDER}/logs/installed_packages.txt logs/
   artifacts:
     paths:
       - logs/
-    expire_in: 1 week  # Mantén los artefactos por una semana
+    expire_in: 1 week  # Keep the artifacts for one week
   rules:
     - if: $CI_COMMIT_TITLE =~ /^BUILD_MN5.*$/
       variables:
-          LAUNCH_TARGET: local
+        LAUNCH_TARGET: mn5
   tags:
-    - ${TAGS} # Utiliza solo los runners de OpenStack
+    - ${TAGS}
