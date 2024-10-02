@@ -54,10 +54,9 @@ build_image_mn5:
   script:
     # Step 1: Set up variables and SSH connection
     - export BUILD_IMAGE_NAME=$(echo "$CI_COMMIT_MESSAGE" | grep -oP '(?<=--image=)[^ ]+')
-    - echo "The new image is: $BUILD_IMAGE_NAME"
+    - echo "The new image is ${BUILD_IMAGE_NAME}"
     
 
-    
   after_script:
     # Fetch logs and artifacts from the remote server
     - scp -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}:${LAUNCH_TARGET_FOLDER}/logs/pip_freeze.txt logs/
