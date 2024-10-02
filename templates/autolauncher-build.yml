@@ -45,13 +45,16 @@ build_image_mn5:
   stage: build_image_mn5  # New stage for building Singularity image
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
+    - time apk add bash
+  script:
+    # Step 0: prepare the environment
     - apk add bash openssh-client rsync git  # Install necessary packages
     - mkdir -p ~/.ssh/
     - cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
     - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
     - chmod 0600 ~/.ssh/ssh-key
     - md5sum ~/.ssh/ssh-key  # Check SSH key integrity
-  script:
+
     # Step 1: Set up variables and SSH connection
     - export BUILD_IMAGE_NAME=$(echo "$CI_COMMIT_MESSAGE" | grep -oP '(?<=--image=)[^ ]+')
     - echo "The new image is $BUILD_IMAGE_NAME"
