@@ -39,10 +39,11 @@ build:
   tags: 
     - ${TAGS}
 
+
 build_image_mn5:
   image: ci.atalaya.at/containers/docker:stable  # Stable base image
   stage: build_image_mn5  # New stage for building Singularity image
-    before_script:
+  before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
     - apk add bash openssh-client rsync git  # Install necessary packages
     - mkdir -p ~/.ssh/
