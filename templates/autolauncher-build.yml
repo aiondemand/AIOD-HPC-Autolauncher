@@ -1,4 +1,5 @@
 variables:
+    BUILD_IMAGE_NAME: ""
     DOCKERFILE_TAG: ""
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     TAGS: estufa # mininostrum, estufa or pepino
@@ -8,8 +9,8 @@ build:
   stage: build
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
-  script:
     - time apk add bash
+  script:
     - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
     - >-
       echo -e "[global]\ntimeout = 60\nindex-url = https://pypi.org/simple\ntrusted-host = pypi.org\n               hpai.bsc.es\nextra-index-url = https://${pypi_user}:${pypi_pass}@hpai.bsc.es:11080/simple/\n" > pip.conf
@@ -31,20 +32,21 @@ build:
     - ${TAGS}
 
 # Nuevo stage para construir la imagen Singularity y ejecutar el despliegue
-build_mn5:
+build_image_mn5:
   image: ci.atalaya.at/containers/docker:stable  # Imagen base estable
   stage: build_mn5  # Nueva etapa para construir Singularity
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
+    - time apk add bash
   script:
-    # Paso 1: Conectar con estufa
-    
+    # Paso 1: Conectar con cluster
+    - 
 
-    # Paso 2: Descargar la imagen base NVIDIA con PyTorch y construir Singularity
+    # Paso 2: Descargar la imagen base y construir la imagen de Singularity
     #  - Descargar la imagen de NVIDIA
-    - docker pull nvcr.io/nvidia/pytorch:24.02-py3
+    - docker pull ${BUILD_IMAGE_NAME}
     #  - Usar Singularity para crear un sandbox
-    - singularity build --sandbox ${SINGULARITY_IMAGE_PATH} docker://nvcr.io/nvidia/pytorch:24.02-py3
+    - singularity build --sandbox ${SINGULARITY_IMAGE_PATH} docker://${BUILD_IMAGE_NAME}
 
     # Paso 3: Ejecutar el script de modificaciones de la imagen base
     #  - Aquí realizarás las modificaciones que necesites (instalación de paquetes, etc.)
