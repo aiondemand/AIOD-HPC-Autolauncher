@@ -58,12 +58,12 @@ build_image_mn5:
     
     # Step 2: Connect to the remote server and prepare the environment
     - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "mkdir -p ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/"
-    
+
     # Step 3: Pull the Docker image on the remote server
     - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "docker pull ${BUILD_IMAGE_NAME}"
 
     # Step 4: Build the Singularity image in sandbox mode
-    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "singularity build --sandbox ${LAUNCH_TARGET_FOLDER}/singdir docker://${BUILD_IMAGE_NAME}"
+    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "singularity build --sandbox ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/ docker://${BUILD_IMAGE_NAME}"
 
     # Step 5: Enter the Singularity sandbox and launch a writable shell
     - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "cd ${LAUNCH_TARGET_FOLDER}/singdir && singularity shell --writable --nv ."
