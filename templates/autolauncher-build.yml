@@ -50,8 +50,8 @@ build_image_mn5:
     # Step 0: prepare the environment
     - apk add bash openssh-client rsync git  # Install necessary packages
     - mkdir -p ~/.ssh/
-    - cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
-    - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
+    - 'echo cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts'
+    - 'cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key'
     - chmod 0600 ~/.ssh/ssh-key
     - md5sum ~/.ssh/ssh-key  # Check SSH key integrity
 
