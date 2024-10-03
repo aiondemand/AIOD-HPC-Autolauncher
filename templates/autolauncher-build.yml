@@ -50,13 +50,13 @@ build_image_mn5:
     # Step 0: prepare the environment
     - apk add bash openssh-client rsync git  # Install necessary packages
     - mkdir -p ~/.ssh/
-    - 'echo cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts'
-    - 'cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key'
+    - echo cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
+    - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
     - chmod 0600 ~/.ssh/ssh-key
     - md5sum ~/.ssh/ssh-key  # Check SSH key integrity
 
     # Step 1: Set up variables and SSH connection
-    - export BUILD_IMAGE_NAME=$(echo "$CI_COMMIT_MESSAGE" | grep -oP '(?<=--image=)[^ ]+')
+    - export BUILD_IMAGE_NAME=$(echo "$CI_COMMIT_MESSAGE" | grep -oE '--image=[^ ]+' | cut -d'=' -f2)
     - 'echo "The new image is: $BUILD_IMAGE_NAME"'
     
     # Step 2: Connect to the remote server and prepare the environment
