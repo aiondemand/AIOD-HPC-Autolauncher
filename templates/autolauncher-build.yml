@@ -56,7 +56,7 @@ build_image_mn5:
     - md5sum ~/.ssh/ssh-key  # Check SSH key integrity
 
     # Step 1: Set up variables and SSH connection
-    - export BUILD_IMAGE_NAME=$(echo "$CI_COMMIT_MESSAGE" | grep -oE '--image=[^ ]+' | cut -d'=' -f2)
+    - export BUILD_IMAGE_NAME=$(echo "$CI_COMMIT_MESSAGE" | awk '{for(i=1;i<=NF;i++) if ($i ~ /^--image=/) print substr($i, 9)}')
     - 'echo "The new image is: $BUILD_IMAGE_NAME"'
     
     # Step 2: Connect to the remote server and prepare the environment
