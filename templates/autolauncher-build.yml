@@ -37,13 +37,18 @@ build:
 
 build_image_mn5:
   # Stable base image
-  image: ci.atalaya.at/containers/singularity:v3.6.4-slim
+  image: ci.atalaya.at/containers/docker:stable
   # New stage for building Singularity image on build stage
   stage: build
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
     - time apk add bash
   script:
+    # Step 0: Set up the environment
+    - echo "Listing all available images:"
+    - docker search ci.atalaya.at/containers/singularity
+    - curl -X GET "https://ci.atalaya.at/v2/_catalog" 
+
     # Step 1: Set up variables and SSH connection
     - export BUILD_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
     - 'echo "The new image is: $BUILD_IMAGE_NAME"'
@@ -62,14 +67,10 @@ build_image_mn5:
 
     # Step 5: Save logs on the remote server
     - singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} dpkg -l > installed_packages.txt"
-    - mkdir -p ${JOB_WORKDIR}/logs && cp installed_packages.txt ${JOB_WORKDIR}/logs/"
-  after_script:
-    # Fetch logs and artifacts from the remote server
-    - ${JOB_WORKDIR}/logs/pip_freeze.txt logs/
-    - ${JOB_WORKDIR}/logs/installed_packages.txt logs/
+    - mkdir -p ${JOB_WORKDIR}/autolauncher-output/output && cp installed_packages.txt ${JOB_WORKDIR}/autolauncher-output/output/"
   artifacts:
     paths:
-      - logs/
+      - autolauncher-output/output
     expire_in: 1 week  # Keep the artifacts for one week
   rules:
     - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5.*$/
