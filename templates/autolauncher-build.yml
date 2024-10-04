@@ -46,7 +46,7 @@ build_image_mn5:
   script:
     # Step 1: Set up variables and SSH connection
     - export BUILD_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
-    - 'echo "The new image is: $BUILD_IMAGE_NAME"'
+    - echo "The new image is $BUILD_IMAGE_NAME"
     
     # Step 2: prepare the environment
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_COMMIT_SHORT_SHA}
