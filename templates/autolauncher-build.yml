@@ -39,6 +39,7 @@ build_image_mn5:
   # Stable base image
   image: quay.io/singularity/singularity:v3.6.4-slim
   # New stage for building Singularity image on build stage
+  entrypoint: ["/bin/sh"]
   stage: build
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
@@ -54,7 +55,7 @@ build_image_mn5:
     # Step 2: prepare the environment
     - mkdir -p ${JOB_WORKDIR}//autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output/"
     
-    # Step 3: Pull the Docker image on the remote server
+    # Step 3: Pull the Docker image on the remote serv3.6.4ver
     - docker pull ${BUILD_IMAGE_NAME}
 
     # Step 4: Build the Singularity image in sandbox mode
