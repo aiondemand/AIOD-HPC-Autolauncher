@@ -39,11 +39,7 @@ build_image_mn5:
   # Stable base image
   image: quay.io/singularity/singularity:v3.6.4-slim
   # New stage for building Singularity image on build stage
-  entrypoint: ["/bin/sh"]
   stage: build
-  before_script:
-    - apk add --update curl && rm -rf /var/cache/apk/*
-    - time apk add bash
   script:
     # Step 1: Set up variables and SSH connection
     - export BUILD_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
