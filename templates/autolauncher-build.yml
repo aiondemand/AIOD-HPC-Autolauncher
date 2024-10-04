@@ -52,18 +52,16 @@ build_image_mn5:
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_COMMIT_SHORT_SHA}
 
     # Step 2: prepare the environment
-    - mkdir -p ${JOB_WORKDIR}//autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output/output"
+    - mkdir -p ${JOB_WORKDIR}//autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output/"
     
     # Step 3: Pull the Docker image on the remote server
-    - docker pull ${BUILD_IMAGE_NAME}"
+    - docker pull ${BUILD_IMAGE_NAME}
 
     # Step 4: Build the Singularity image in sandbox mode
     - singularity build --sandbox ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}"
 
     # Step 5: Save logs on the remote server
     - singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} dpkg -l > installed_packages.txt"
-    - mkdir -p ${JOB_WORKDIR}/autolauncher-output/output && cp installed_packages.txt ${JOB_WORKDIR}/autolauncher-output/output/"
-  artifacts:
     paths:
       - autolauncher-output/output
     expire_in: 1 week  # Keep the artifacts for one week
