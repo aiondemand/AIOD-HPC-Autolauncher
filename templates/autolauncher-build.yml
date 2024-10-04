@@ -36,41 +36,37 @@ build:
 
 
 build_image_mn5:
-  # Stable base image
+  # Usamos la imagen de Singularity como base
   image: quay.io/singularity/singularity:v3.6.4-slim
-  # New stage for building Singularity image on build stage
   stage: build
-  before_script:
-    - apk add --update curl && rm -rf /var/cache/apk/*
-    - time apk add bash
   script:
-    # Step 1: Set up variables and SSH connection
+    # Step 1: Configurar variables y conexión SSH
     - export BUILD_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
-    - echo "The new image is $BUILD_IMAGE_NAME"
+    - echo "The new image is: $BUILD_IMAGE_NAME"
     
-    # Step 2: prepare the environment
+    # Step 2: Preparar el entorno
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_COMMIT_SHORT_SHA}
+    - mkdir -p ${JOB_WORKDIR}/autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output
 
-    # Step 2: prepare the environment
-    - mkdir -p ${JOB_WORKDIR}//autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output/"
-    
-    # Step 3: Pull the Docker image on the remote serv3.6.4ver
+    # Step 3: Hacer pull de la imagen Docker usando Singularity directamente (no Docker)
     - singularity pull docker://${BUILD_IMAGE_NAME}
 
     # Step 4: Build the Singularity image in sandbox mode
-    - singularity build --sandbox ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}"
+    - singularity build --sandbox ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}
 
-    # Step 5: Save logs on the remote server
-    - singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} apk info > installed_packages.txt"
+    # Step 5: Ejecutar un comando dentro de la imagen
+    - singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} apk info > installed_packages.txt
+
   artifacts:
     paths:
       - autolauncher-output/output
-    expire_in: 1 week  # Keep the artifacts for one week
+    expire_in: 1 week
   rules:
     - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5.*$/
     - when: never
   tags:
     - estufa
+
 
 
 update_image_mn5:
@@ -84,7 +80,7 @@ update_image_mn5:
   script:
     # Step 1: Set up variables and SSH connection
     - export BUILD_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
-    - 'echo "The new image is: $BUILD_IMAGE_NAME"'
+    - echo "The new image is $BUILD_IMAGE_NAME"
     
     # Step 2: Connect to the remote server and prepare the environment
     - mkdir -p ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/"
