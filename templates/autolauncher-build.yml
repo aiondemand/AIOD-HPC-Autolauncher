@@ -1,14 +1,9 @@
 variables:
     LAUNCH_TARGET_HOSTNAME: amdlogin.bsc.es
-    LAUNCH_TARGET_USERNAME: hpai
     LAUNCH_TARGET_FOLDER: /gpfs/projects/bsc70/hpai/storage/data/tests/
-    LAUNCH_TARGET_SSH_KEY: some_file
-    LAUNCH_TARGET_SRC_DIR: src/
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     LAUNCH_CONFIG_PATH: configs/config.json
-    KNOWN_HOSTS_FILE: some_file
-    SINGULARITY_VERSION: 3.6.4
-    LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
+    LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME} # qi
     BUILD_IMAGE_NAME: nvcr.io/nvidia/pytorch:24.02-py3
     TAGS: estufa # mininostrum, estufa or pepino
 
@@ -41,56 +36,92 @@ build:
 
 
 build_image_mn5:
-  image: ci.atalaya.at/containers/docker:stable  # Stable base image
-  stage: build_image_mn5  # New stage for building Singularity image
+  # Stable base image
+  image: ci.atalaya.at/containers/singularity:v3.6.4-slim
+  # New stage for building Singularity image on build stage
+  stage: build
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
     - time apk add bash
   script:
-    # Step 0: prepare the environment
-    - apk add bash openssh-client rsync git  # Install necessary packages
-    - mkdir -p ~/.ssh/
-    - echo cp ${KNOWN_HOSTS_FILE} ~/.ssh/known_hosts
-    - cp ${LAUNCH_TARGET_SSH_KEY} ~/.ssh/ssh-key
-    - chmod 0600 ~/.ssh/ssh-key
-    - md5sum ~/.ssh/ssh-key  # Check SSH key integrity
-
     # Step 1: Set up variables and SSH connection
-    - export BUILD_IMAGE_NAME=$(echo "$CI_COMMIT_MESSAGE" | awk '{for(i=1;i<=NF;i++) if ($i ~ /^--image=/) print substr($i, 9)}')
+    - export BUILD_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
     - 'echo "The new image is: $BUILD_IMAGE_NAME"'
     
-    # Step 2: Connect to the remote server and prepare the environment
-    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "mkdir -p ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/"
+    # Step 2: prepare the environment
+    - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_COMMIT_SHORT_SHA}
+
+    # Step 2: prepare the environment
+    - mkdir -p ${JOB_WORKDIR}/ && cd ${JOB_WORKDIR}/"
     
     # Step 3: Pull the Docker image on the remote server
-    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "docker pull ${BUILD_IMAGE_NAME}"
+    - docker pull ${BUILD_IMAGE_NAME}"
 
     # Step 4: Build the Singularity image in sandbox mode
-    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "singularity build --sandbox ${LAUNCH_TARGET_FOLDER}/singdir docker://${BUILD_IMAGE_NAME}"
+    - singularity build --sandbox ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}"
 
-    # Step 5: Enter the Singularity sandbox and launch a writable shell
-    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "cd ${LAUNCH_TARGET_FOLDER}/singdir && singularity shell --writable --nv ."
-
-    # Step 6: Run the image.sh script inside the Singularity sandbox
-    - scp -i ~/.ssh/ssh-key image.sh ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}:${LAUNCH_TARGET_FOLDER}/singdir/image.sh
-    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "cd ${LAUNCH_TARGET_FOLDER}/singdir && bash image.sh"
-    
-    # Step 7: Save logs on the remote server
-    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "singularity exec ${LAUNCH_TARGET_FOLDER}/singdir pip freeze > pip_freeze.txt"
-    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "singularity exec ${LAUNCH_TARGET_FOLDER}/singdir dpkg -l > installed_packages.txt"
-    - ssh -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME} "mkdir -p ${LAUNCH_TARGET_FOLDER}/logs && cp pip_freeze.txt installed_packages.txt ${LAUNCH_TARGET_FOLDER}/logs/"
-    
+    # Step 5: Save logs on the remote server
+    - singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} dpkg -l > installed_packages.txt"
+    - mkdir -p ${JOB_WORKDIR}/logs && cp installed_packages.txt ${JOB_WORKDIR}/logs/"
   after_script:
     # Fetch logs and artifacts from the remote server
-    - scp -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}:${LAUNCH_TARGET_FOLDER}/logs/pip_freeze.txt logs/
-    - scp -i ~/.ssh/ssh-key ${LAUNCH_TARGET_USERNAME}@${LAUNCH_TARGET_HOSTNAME}:${LAUNCH_TARGET_FOLDER}/logs/installed_packages.txt logs/
+    - ${JOB_WORKDIR}/logs/pip_freeze.txt logs/
+    - ${JOB_WORKDIR}/logs/installed_packages.txt logs/
   artifacts:
     paths:
       - logs/
     expire_in: 1 week  # Keep the artifacts for one week
   rules:
-    - if: $CI_COMMIT_TITLE =~ /^BUILD_MN5.*$/
+    - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5.*$/
+    - when: never
+  tags:
+    - estufa
+
+
+update_image_mn5:
+  # Stable singularity base image
+  image: ci.atalaya.at/containers/singularity:v3.6.4-slim
+  ## New stage for Update Singularity image on build stage
+  stage: build
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+    - time apk add bash
+  script:
+    # Step 1: Set up variables and SSH connection
+    - export BUILD_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
+    - 'echo "The new image is: $BUILD_IMAGE_NAME"'
+    
+    # Step 2: Connect to the remote server and prepare the environment
+    - mkdir -p ${LAUNCH_TARGET_FOLDER}/containers/${LAUNCH_VERSION}/"
+    
+    # Step 3: Pull the Docker image on the remote server
+    - docker pull ${BUILD_IMAGE_NAME}"
+
+    # Step 4: Build the Singularity image in sandbox mode
+    - singularity build --sandbox ${LAUNCH_TARGET_FOLDER}/singdir docker://${BUILD_IMAGE_NAME}"
+
+    # Step 5: Enter the Singularity sandbox and launch a writable shell
+    - cd ${LAUNCH_TARGET_FOLDER}/singdir && singularity shell --writable --nv ."
+
+    # Step 6: Run the image.sh script inside the Singularity sandbox
+    - cp ${LAUNCH_TARGET_FOLDER}/singdir/image.sh
+    - scd ${LAUNCH_TARGET_FOLDER}/singdir && bash image.sh" # tiempo de ejecucion del sanbox"
+    
+    # Step 7: Save logs on the remote server
+    - singularity exec ${LAUNCH_TARGET_FOLDER}/singdir pip freeze > pip_freeze.txt"
+    - singularity exec ${LAUNCH_TARGET_FOLDER}/singdir dpkg -l > installed_packages.txt"
+    - mkdir -p ${LAUNCH_TARGET_FOLDER}/logs && cp pip_freeze.txt installed_packages.txt ${LAUNCH_TARGET_FOLDER}/logs/"
+  after_script:
+    # Fetch logs and artifacts from the remote server
+    - ${LAUNCH_TARGET_FOLDER}/logs/pip_freeze.txt logs/
+    - ${LAUNCH_TARGET_FOLDER}/logs/installed_packages.txt logs/
+  artifacts:
+    paths:
+      - logs/
+    expire_in: 1 week  # Keep the artifacts for one week
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^UPDATE_IMAGE_MN5.*$/
       variables:
         LAUNCH_TARGET: mn5
   tags:
-    - ${TAGS}
+    - estufa
