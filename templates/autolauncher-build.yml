@@ -55,7 +55,7 @@ build_image_mn5:
     - mkdir -p ${JOB_WORKDIR}//autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output/"
     
     # Step 3: Pull the Docker image on the remote serv3.6.4ver
-    - docker pull ${BUILD_IMAGE_NAME}
+    - singularity pull docker://${BUILD_IMAGE_NAME}
 
     # Step 4: Build the Singularity image in sandbox mode
     - singularity build --sandbox ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}"
