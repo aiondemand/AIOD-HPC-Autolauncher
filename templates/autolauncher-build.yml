@@ -40,6 +40,9 @@ build_image_mn5:
   image: quay.io/singularity/singularity:v3.6.4-slim
   # New stage for building Singularity image on build stage
   stage: build
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+    - time apk add bash
   script:
     # Step 1: Set up variables and SSH connection
     - export BUILD_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
@@ -58,7 +61,7 @@ build_image_mn5:
     - singularity build --sandbox ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}"
 
     # Step 5: Save logs on the remote server
-    - singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} dpkg -l > installed_packages.txt"
+    - singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} apk info > installed_packages.txt"
   artifacts:
     paths:
       - autolauncher-output/output
