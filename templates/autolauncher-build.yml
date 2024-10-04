@@ -62,6 +62,7 @@ build_image_mn5:
 
     # Step 5: Save logs on the remote server
     - singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} dpkg -l > installed_packages.txt"
+  artifacts:
     paths:
       - autolauncher-output/output
     expire_in: 1 week  # Keep the artifacts for one week
