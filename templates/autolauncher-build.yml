@@ -37,7 +37,9 @@ build:
 
 build_image_mn5:
   # Usamos la imagen de Singularity como base
-  image: quay.io/singularity/singularity:v3.6.4-slim
+  image: 
+    name: quay.io/singularity/singularity:v3.6.4-slim
+    entrypoint: [""]
   stage: build
   before_script:
     - | 
