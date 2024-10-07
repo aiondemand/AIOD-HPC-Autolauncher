@@ -3,8 +3,8 @@ variables:
     LAUNCH_TARGET_FOLDER: /gpfs/projects/bsc70/hpai/storage/data/tests/
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     LAUNCH_CONFIG_PATH: configs/config.json
+    EXEC_HOSTS_FILE: some_file
     LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME} # qi
-    BUILD_IMAGE_NAME: nvcr.io/nvidia/pytorch:24.02-py3
     TAGS: estufa # mininostrum, estufa or pepino
 
 build:
@@ -38,7 +38,7 @@ build:
 build_image_mn5:
   # Usamos la imagen de Singularity como base
   image: 
-    name: quay.io/singularity/singularity:v3.6.4-slim
+    name: quay.io/singularity/singularity:v3.11.5-slim
     entrypoint: [""]
   stage: build
   services:
@@ -50,27 +50,24 @@ build_image_mn5:
         apk add --update curl && rm -rf /var/cache/apk/*
         time apk add bash
   script:
-    # Step 1: Configurar variables y conexión SSH
+    # Step 1: extract the image name from the commit title
     - export BUILD_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
     - echo "The new image is $BUILD_IMAGE_NAME"
     
-    # Step 2: Preparar el entorno
-    #- JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_COMMIT_SHORT_SHA}
-    #- mkdir -p ${JOB_WORKDIR}/autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output
-    # Crear el directorio de trabajo
+    # Step 2: Prepare the working directory
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_COMMIT_SHORT_SHA}
-    - mkdir -p ${JOB_WORKDIR}/autolauncher-output
+    - mkdir -p ${JOB_WORKDIR}/autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output
 
-    # Descargar y construir la imagen Docker
-    #- docker pull ${BUILD_IMAGE_NAME}
+    # Download the image from Docker Hub
+    - docker pull ${BUILD_IMAGE_NAME}
 
-    # Step 3: Hacer pull de la imagen Docker usando Singularity directamente (no Docker)
+    # Step 3: do the pull of the image on the host
     - singularity pull docker://${BUILD_IMAGE_NAME}
 
     # Step 4: Build the Singularity image in sandbox mode
     - singularity build --sandbox ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}
 
-    # Step 5: Ejecutar un comando dentro de la imagen
+    # Step 5: run the command inside the singularity container
     - singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} apk info > installed_packages.txt
   artifacts:
     paths:
@@ -78,6 +75,45 @@ build_image_mn5:
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5.*$/
+    - when: never
+  tags:
+    - estufa
+
+update_image_mn5:
+  image:
+    name: quay.io/singularity/singularity:v3.11.5-slim
+    entrypoint: [""]
+  stage: build
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
+  script:
+    # get image to use from commit title
+    - export UPDATE_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
+    - 'echo "The update image is: $UPDATE_IMAGE_NAME"'
+    
+    # Define the working directory
+    - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_COMMIT_SHORT_SHA}
+    - mkdir -p ${JOB_WORKDIR}/autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output
+
+    # step 1: download from path
+    - singularity build --sandbox ${JOB_WORKDIR}/${UPDATE_IMAGE_NAME} docker://${UPDATE_IMAGE_NAME}
+
+    # step 2: copy the install.sh script to the singularity container
+    - singularity exec --writable ${JOB_WORKDIR}/${UPDATE_IMAGE_NAME} cp /path/to/$EXEC_HOSTS_FILE /mnt/data/$EXEC_HOSTS_FILE
+
+    # step 3: run the install.sh script
+    - singularity exec --writable ${JOB_WORKDIR}/${UPDATE_IMAGE_NAME} /bin/sh /mnt/data/$EXEC_HOSTS_FILE
+
+    # step 4: check the installed packages
+    - singularity exec ${JOB_WORKDIR}/${UPDATE_IMAGE_NAME} dpkg -l > installed_packages.txt
+  artifacts:
+    paths:
+      - autolauncher-output/output
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^UPDATE_IMAGE_MN5.*$/
     - when: never
   tags:
     - estufa
