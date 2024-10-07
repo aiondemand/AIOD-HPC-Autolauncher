@@ -69,7 +69,5 @@ build_image_mn5:
   rules:
     - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5.*$/
     - when: never
-  volumes:
-    - /gpfs/projects/bsc70/hpai/:/gpfs/projects/bsc70/hpai/
   tags:
     - estufa
