@@ -41,6 +41,10 @@ build_image_mn5:
     name: quay.io/singularity/singularity:v3.6.4-slim
     entrypoint: [""]
   stage: build
+  ervices:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
   before_script:
     - | 
         apk add --update curl && rm -rf /var/cache/apk/*
@@ -51,14 +55,20 @@ build_image_mn5:
     - echo "The new image is $BUILD_IMAGE_NAME"
     
     # Step 2: Preparar el entorno
+    #- JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_COMMIT_SHORT_SHA}
+    #- mkdir -p ${JOB_WORKDIR}/autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output
+    # Crear el directorio de trabajo
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_COMMIT_SHORT_SHA}
-    - mkdir -p ${JOB_WORKDIR}/autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output
+    - mkdir -p ${JOB_WORKDIR}/autolauncher-output
+
+    # Descargar y construir la imagen Docker
+    #- docker pull ${BUILD_IMAGE_NAME}
 
     # Step 3: Hacer pull de la imagen Docker usando Singularity directamente (no Docker)
     - singularity pull docker://${BUILD_IMAGE_NAME}
 
     # Step 4: Build the Singularity image in sandbox mode
-    - singularity build --sandbox --bind /gpfs/projects/bsc70/hpai/:/gpfs/projects/bsc70/hpai/ ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}
+    - singularity build --sandbox ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}
 
     # Step 5: Ejecutar un comando dentro de la imagen
     - singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} apk info > installed_packages.txt
