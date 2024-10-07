@@ -58,7 +58,7 @@ build_image_mn5:
     - singularity pull docker://${BUILD_IMAGE_NAME}
 
     # Step 4: Build the Singularity image in sandbox mode
-    - singularity build --sandbox ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}
+    - singularity build --sandbox --bind /gpfs/projects/bsc70/hpai/:/gpfs/projects/bsc70/hpai/ ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}
 
     # Step 5: Ejecutar un comando dentro de la imagen
     - singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} apk info > installed_packages.txt
