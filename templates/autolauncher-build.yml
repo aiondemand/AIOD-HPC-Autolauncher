@@ -41,7 +41,7 @@ build_image_mn5:
     name: quay.io/singularity/singularity:v3.6.4-slim
     entrypoint: [""]
   stage: build
-  ervices:
+  services:
     - docker:dind
   variables:
     DOCKER_DRIVER: overlay2
