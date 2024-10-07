@@ -54,7 +54,7 @@ build_image_mn5:
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_COMMIT_SHORT_SHA}
     - mkdir -p ${JOB_WORKDIR}/autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output
 
-        # Step 3: Hacer pull de la imagen Docker usando Singularity directamente (no Docker)
+    # Step 3: Hacer pull de la imagen Docker usando Singularity directamente (no Docker)
     - singularity pull docker://${BUILD_IMAGE_NAME}
 
     # Step 4: Build the Singularity image in sandbox mode
@@ -69,5 +69,7 @@ build_image_mn5:
   rules:
     - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5.*$/
     - when: never
+  volumes:
+    - /gpfs/projects/bsc70/hpai/:/gpfs/projects/bsc70/hpai/
   tags:
     - estufa
