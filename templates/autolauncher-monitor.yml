@@ -114,6 +114,10 @@ monitor_local:
 
 
 monitor_mn5:
+  id_tokens:
+    CI_JOB_JWT:
+      aud:
+        - https://pass.hpai.bsc.es:18200
   image: ci.atalaya.at/containers/cesga:0.0.6
   stage: monitor
   timeout: 15 hours
@@ -172,6 +176,10 @@ monitor_cesga:
     - cesga
 
 monitor_leonardo:
+  id_tokens:
+    CI_JOB_JWT:
+      aud:
+        - https://pass.hpai.bsc.es:18200
   image: ci.atalaya.at/containers/cesga:0.0.6
   stage: monitor
   timeout: 12 hours
