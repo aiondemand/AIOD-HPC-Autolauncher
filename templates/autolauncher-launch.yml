@@ -98,6 +98,10 @@ launch_local:
     - ${TAGS}
 
 launch_mn5:
+  id_tokens:
+    CI_JOB_JWT:
+      aud:
+        - https://pass.hpai.bsc.es:18200
   image: ci.atalaya.at/containers/cesga:0.0.6
   stage: launch
   script:
@@ -132,6 +136,10 @@ launch_mn5:
 
 
 launch_cesga:
+  id_tokens:
+    CI_JOB_JWT:
+      aud:
+        - https://pass.hpai.bsc.es:18200
   image: ci.atalaya.at/containers/cesga:0.0.6
   stage: launch
   script:
@@ -161,6 +169,10 @@ launch_cesga:
     - cesga
 
 launch_leonardo:
+  id_tokens:
+    CI_JOB_JWT:
+      aud:
+        - https://pass.hpai.bsc.es:18200
   image: ci.atalaya.at/containers/cesga:0.0.6
   stage: launch
   script:
