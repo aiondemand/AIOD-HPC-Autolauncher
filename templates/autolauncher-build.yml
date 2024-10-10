@@ -1,9 +1,9 @@
 variables:
-    LAUNCH_TARGET_HOSTNAME: amdlogin.bsc.es
     LAUNCH_TARGET_FOLDER: /gpfs/projects/bsc70/hpai/storage/data/tests/
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     LAUNCH_CONFIG_PATH: configs/config.json
     EXEC_HOSTS_FILE: some_file
+    REQUIREMT_FILE: requirements.txt
     LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME} # qi
     TAGS: estufa # mininostrum, estufa or pepino
 
@@ -45,6 +45,8 @@ build_image_mn5:
     - | 
         apk add --update curl && rm -rf /var/cache/apk/*
         time apk add bash
+        apk add python3 py3-pip
+        pip3 install sregistry[all]
   script:
     # Step 1: extract the image name from the commit title
     - export BUILD_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
@@ -60,8 +62,23 @@ build_image_mn5:
     # Step 4: Build the Singularity image in sandbox mode
     - singularity build --sandbox ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}
 
-    # Step 5: run the command inside the singularity container
-    - singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} apk info > installed_packages.txt
+    # step 5: copy the requirement file to the singularity container
+    - cp ./$REQUIREMT_FILE /tmp/$REQUIREMT_FILE
+
+    # steo 6: run pip install inside the sigularity image
+    - singularity exec --writable --nv ${JOB_WORKDIR}/${UPDATE_IMAGE_NAME} /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
+
+    # step 7: run the command inside the singularity container
+    - singularity exec --writable ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} /bin/sh -c "pip freeze > pip_freeze.txt"
+
+    # step 8: convert to sif format
+    - singularity build ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}
+
+    # Step 8: pull the singularity image to the singularity registry
+    # - sregistry push --name ${BUILD_IMAGE_NAME} ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}
+
+    # Step 8:a pull the singulaity image to the docker registry
+    - singularity build --docker-login --remote docker://${BUILD_IMAGE_NAME} ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}
   artifacts:
     paths:
       - autolauncher-output/output
@@ -90,7 +107,7 @@ update_image_mn5:
     - singularity build --sandbox ${JOB_WORKDIR}/${UPDATE_IMAGE_NAME} docker://${UPDATE_IMAGE_NAME}
 
     # step 2: copy the install.sh script to the singularity container
-    - singularity exec --writable ${JOB_WORKDIR}/${UPDATE_IMAGE_NAME} cp ./$EXEC_HOSTS_FILE /tmp/$EXEC_HOSTS_FILE
+    - cp ./$EXEC_HOSTS_FILE /tmp/$EXEC_HOSTS_FILE
 
     # step 3: run the install.sh script
     - singularity exec --writable ${JOB_WORKDIR}/${UPDATE_IMAGE_NAME} /bin/sh /tmp/$EXEC_HOSTS_FILE
