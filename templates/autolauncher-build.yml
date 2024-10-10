@@ -51,6 +51,10 @@ build_image_mn5:
     # Step 1: extract the image name from the commit title
     - export BUILD_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
     - echo "The new image is $BUILD_IMAGE_NAME"
+
+    # Step 2: Remove initial path from string
+    - BUILD_IMAGE_NAME2=${str#CI_PROJECT_NAMESPACE/}
+    - echo "The new image is $BUILD_IMAGE_NAME2"
     
     # Step 2: Prepare the working directory
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
