@@ -59,6 +59,7 @@ build_image_mn5:
         echo "The current project path is: $CI_PROJECT_PATH"
         echo ${JOB_WORKDIR}/autolauncher-output
         mkdir -p ${JOB_WORKDIR}/autolauncher-output
+        echo "creted directory " | ls -la ${JOB_WORKDIR}/autolauncher-output
         cd ${JOB_WORKDIR}/${CI_PROJECT_PATH}
         echo "Current directory " | ls -la
         echo "Working directory " | pwd
