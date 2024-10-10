@@ -53,10 +53,10 @@ build_image_mn5:
     - echo "The new image is $BUILD_IMAGE_NAME"
     
     # Step 2: Prepare the working directory
-    - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${LAUNCH_IMAGE_NAME}
+    - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
     - | 
         mkdir -p ${JOB_WORKDIR}/autolauncher-output/
-        cd ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME}
+        cd ${JOB_WORKDIR}/${CI_PROJECT_PATH}
         echo "Current directory " | ls -la
         echo "Working directory " | pwd
 
