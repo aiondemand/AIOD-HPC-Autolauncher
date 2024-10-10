@@ -55,14 +55,9 @@ build_image_mn5:
     # Step 2: Prepare the working directory
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
     - | 
-        echo "The working directory is: $JOB_WORKDIR"
-        echo "The current project path is: $CI_PROJECT_PATH"
-        echo "prox to ${JOB_WORKDIR}/autolauncher-output"
         mkdir -p ${JOB_WORKDIR}/autolauncher-output
-        echo "creted directory " | ls -la ${JOB_WORKDIR}/autolauncher-output
-        cd ${JOB_WORKDIR}
-        echo "Current directory " | ls -la
-        echo "Working directory " | pwd
+        cd ${JOB_WORKDIR}/autolauncher-output
+        echo "The image name: ${LAUNCH_IMAGE_NAME}"
 
     # Step 3: do the pull of the image on the host
     - singularity pull docker://${BUILD_IMAGE_NAME}
@@ -74,10 +69,10 @@ build_image_mn5:
     - cp ./$REQUIREMT_FILE /tmp/$REQUIREMT_FILE
 
     # steo 6: run pip install inside the sigularity image
-    - singularity exec --writable --nv ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME} /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
+    - singularity exec --writable --nv ./ /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
 
     # step 7: run the command inside the singularity container
-    - singularity exec --writable --nv ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME} /bin/sh -c "pip freeze > pip_freeze.txt"
+    - singularity exec --writable --nv ./ /bin/sh -c "pip freeze > pip_freeze.txt"
 
     # step 8: convert to sif format
     - singularity build ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME}.sif ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME}
