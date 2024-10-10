@@ -52,22 +52,20 @@ build_image_mn5:
     - export BUILD_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
     - echo "The new image is $BUILD_IMAGE_NAME"
 
-    # Step 2: Remove initial path from string
-    - BUILD_IMAGE_NAME2=${LAUNCH_IMAGE_NAME#"$CI_PROJECT_NAMESPACE/"}
-    - echo "The new image is $BUILD_IMAGE_NAME2"
+    # Step 2: Remove namespace project path from string
+    - BUILDING_IMAGE_NAME=${LAUNCH_IMAGE_NAME#"$CI_PROJECT_NAMESPACE/"}
     
     # Step 2: Prepare the working directory
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
     - | 
         mkdir -p ${JOB_WORKDIR}/autolauncher-output
         cd ${JOB_WORKDIR}/autolauncher-output
-        echo "The image name: ${LAUNCH_IMAGE_NAME}"
 
     # Step 3: do the pull of the image on the host
     - singularity pull docker://${BUILD_IMAGE_NAME}
 
     # Step 4: Build the Singularity image in sandbox mode
-    - singularity build --sandbox ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}
+    - singularity build --sandbox ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME2} docker://${BUILD_IMAGE_NAME}
 
     # step 5: copy the requirement file to the singularity container
     - cp ./$REQUIREMT_FILE /tmp/$REQUIREMT_FILE
@@ -79,13 +77,13 @@ build_image_mn5:
     - singularity exec --writable --nv ./ /bin/sh -c "pip freeze > pip_freeze.txt"
 
     # step 8: convert to sif format
-    - singularity build ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME}.sif ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME}
+    - singularity build ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME2}.sif ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME2}
 
     # Step 8: pull the singularity image to the singularity registry
     # - sregistry push --name ${LAUNCH_IMAGE_NAME} ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME}
 
     # Step 8:a pull the singulaity image to the docker registry
-    - singularity build --docker-login --remote docker://${LAUNCH_IMAGE_NAME} ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME}
+    - singularity build --docker-login --remote docker://${LAUNCH_IMAGE_NAME} ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME2}
   artifacts:
     paths:
       - autolauncher-output/output
