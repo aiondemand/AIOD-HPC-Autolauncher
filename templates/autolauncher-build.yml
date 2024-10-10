@@ -55,8 +55,9 @@ build_image_mn5:
     # Step 2: Prepare the working directory
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_COMMIT_SHORT_SHA}
     - | 
-        mkdir -p ${JOB_WORKDIR}/autolauncher-output
-        cd ${JOB_WORKDIR}/autolauncher-output
+        mkdir -p ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}autolauncher-output/
+        cd ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}
+        echo "Current directory " | ls -la
         echo "Working directory " | pwd
 
     # Step 3: do the pull of the image on the host
@@ -69,7 +70,7 @@ build_image_mn5:
     - cp ./$REQUIREMT_FILE /tmp/$REQUIREMT_FILE
 
     # steo 6: run pip install inside the sigularity image
-    - singularity exec --writable --nv ${JOB_WORKDIR}/${UPDATE_IMAGE_NAME} /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
+    - singularity exec --writable --nv ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
 
     # step 7: run the command inside the singularity container
     - singularity exec --writable --nv ${JOB_WORKDIR}/${BUILD_IMAGE_NAME} /bin/sh -c "pip freeze > pip_freeze.txt"
