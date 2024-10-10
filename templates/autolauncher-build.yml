@@ -54,7 +54,10 @@ build_image_mn5:
     
     # Step 2: Prepare the working directory
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_COMMIT_SHORT_SHA}
-    - mkdir -p ${JOB_WORKDIR}/autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output && echo "Working directory " | pwd
+    - | 
+        mkdir -p ${JOB_WORKDIR}/autolauncher-output
+        cd ${JOB_WORKDIR}/autolauncher-output
+        echo "Working directory " | pwd
 
     # Step 3: do the pull of the image on the host
     - singularity pull docker://${BUILD_IMAGE_NAME}
