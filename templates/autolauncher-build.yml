@@ -55,7 +55,7 @@ build_image_mn5:
     # Step 2: Prepare the working directory
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${LAUNCH_IMAGE_NAME}
     - | 
-        mkdir -p ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME}/autolauncher-output/
+        mkdir -p ${JOB_WORKDIR}/autolauncher-output/
         cd ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME}
         echo "Current directory " | ls -la
         echo "Working directory " | pwd
