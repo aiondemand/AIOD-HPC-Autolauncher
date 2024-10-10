@@ -55,6 +55,8 @@ build_image_mn5:
     # Step 2: Prepare the working directory
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
     - | 
+        echo "The working directory is: $JOB_WORKDIR"
+        echo "The current project path is: $CI_PROJECT_PATH"
         echo ${JOB_WORKDIR}/autolauncher-output
         mkdir -p ${JOB_WORKDIR}/autolauncher-output
         cd ${JOB_WORKDIR}/${CI_PROJECT_PATH}
