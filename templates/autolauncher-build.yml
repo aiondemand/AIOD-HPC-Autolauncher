@@ -60,7 +60,7 @@ build_image_mn5:
         echo "prox to ${JOB_WORKDIR}/autolauncher-output"
         mkdir -p ${JOB_WORKDIR}/autolauncher-output
         echo "creted directory " | ls -la ${JOB_WORKDIR}/autolauncher-output
-        cd ${JOB_WORKDIR}/${CI_PROJECT_PATH}
+        cd ${JOB_WORKDIR}
         echo "Current directory " | ls -la
         echo "Working directory " | pwd
 
