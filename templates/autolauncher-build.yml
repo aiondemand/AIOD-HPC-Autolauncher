@@ -53,7 +53,7 @@ build_image_mn5:
     - echo "The new image is $BUILD_IMAGE_NAME"
 
     # Step 2: Remove initial path from string
-    - BUILD_IMAGE_NAME2=${LAUNCH_IMAGE_NAME#CI_PROJECT_NAMESPACE/}
+    - BUILD_IMAGE_NAME2=${LAUNCH_IMAGE_NAME#"$CI_PROJECT_NAMESPACE/"}
     - echo "The new image is $BUILD_IMAGE_NAME2"
     
     # Step 2: Prepare the working directory
