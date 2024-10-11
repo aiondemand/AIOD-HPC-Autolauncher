@@ -59,6 +59,7 @@ build_image_mn5:
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
     - | 
         mkdir -p ${JOB_WORKDIR}/autolauncher-output
+        cp ${REQUIREMT_FILE} ${JOB_WORKDIR}/autolauncher-output
         cd ${JOB_WORKDIR}/autolauncher-output
 
     # Step 3: do the pull of the image on the host
