@@ -55,35 +55,35 @@ build_image_mn5:
     # Step 2: Remove namespace project path from string
     - BUILDING_IMAGE_NAME=${LAUNCH_IMAGE_NAME#"$CI_PROJECT_NAMESPACE/"}
     
-    # Step 2: Prepare the working directory
+    # Step 3: Prepare the working directory
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
     - | 
         mkdir -p ${JOB_WORKDIR}/autolauncher-output
         cp ${REQUIREMT_FILE} ${JOB_WORKDIR}/autolauncher-output
         cd ${JOB_WORKDIR}/autolauncher-output
 
-    # Step 3: do the pull of the image on the host
+    # Step 4: do the pull of the image on the host
     - singularity pull docker://${BUILD_IMAGE_NAME}
 
-    # Step 4: Build the Singularity image in sandbox mode
+    # Step 5: Build the Singularity image in sandbox mode
     - singularity build --force --sandbox ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}
 
-    # step 5: copy the requirement file to the singularity container
+    # step 6: copy the requirement file to the singularity container
     - cp ${REQUIREMT_FILE} ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}/tmp/$REQUIREMT_FILE
 
-    # steo 6: run pip install inside the sigularity image
-    - singularity exec --writable --nv ./ /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
+    # steo 7: run pip install inside the sigularity image
+    - singularity exec --nv ./ /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
 
-    # step 7: run the command inside the singularity container
-    - singularity exec --writable --nv ./ /bin/sh -c "pip freeze > pip_freeze.txt"
+    # step 8: run the command inside the singularity container
+    - singularity exec --nv ./ /bin/sh -c "pip freeze > pip_freeze.txt"
 
-    # step 8: convert to sif format
+    # step 9: convert to sif format
     - singularity build ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}.sif ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}
 
-    # Step 8: pull the singularity image to the singularity registry
+    # Step 10: pull the singularity image to the singularity registry
     # - sregistry push --name ${LAUNCH_IMAGE_NAME} ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME}
 
-    # Step 8:a pull the singulaity image to the docker registry
+    # Step 10a: pull the singulaity image to the docker registry
     - singularity build --docker-login --remote docker://${LAUNCH_IMAGE_NAME} ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}
   artifacts:
     paths:
