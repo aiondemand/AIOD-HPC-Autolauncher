@@ -68,7 +68,7 @@ build_image_mn5:
     - singularity build --force --sandbox ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}
 
     # step 5: copy the requirement file to the singularity container
-    - cp ./$REQUIREMT_FILE /tmp/$REQUIREMT_FILE
+    - cp ${REQUIREMT_FILE} ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}/tmp/$REQUIREMT_FILE
 
     # steo 6: run pip install inside the sigularity image
     - singularity exec --writable --nv ./ /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
