@@ -68,14 +68,14 @@ build_image_mn5:
     # Step 5: Build the Singularity image in sandbox mode
     - singularity build --force --sandbox ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}
 
-    # step 6: copy the requirement file to the singularity container
+    # step 6: copy the requirement file to the singularity container (--nv)
     - cp ${REQUIREMT_FILE} ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}/tmp/$REQUIREMT_FILE
 
     # steo 7: run pip install inside the sigularity image
-    - singularity exec --nv ./ /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
+    - singularity exec ./ /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
 
     # step 8: run the command inside the singularity container
-    - singularity exec --nv ./ /bin/sh -c "pip freeze > pip_freeze.txt"
+    - singularity exec ./ /bin/sh -c "pip freeze > pip_freeze.txt"
 
     # step 9: convert to sif format
     - singularity build ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}.sif ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}
