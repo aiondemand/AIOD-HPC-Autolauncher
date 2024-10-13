@@ -41,6 +41,10 @@ build_image_mn5:
     name: quay.io/singularity/singularity:v3.11.5-slim
     entrypoint: [""]
   stage: build
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
   before_script:
     - | 
         apk add --update curl && rm -rf /var/cache/apk/*
@@ -94,7 +98,6 @@ build_image_mn5:
     - when: never
   tags:
     - estufa
-  privileged: true
 
 update_image_mn5:
   image:
