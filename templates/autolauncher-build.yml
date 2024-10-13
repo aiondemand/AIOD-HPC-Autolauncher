@@ -5,7 +5,7 @@ variables:
     EXEC_HOSTS_FILE: some_file
     REQUIREMT_FILE: requirements.txt
     LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME} # qi
-    TAGS: estufa # mininostrum, estufa or pepino
+    TAGS: mininostrum # mininostrum, estufa or pepino
 
 build:
   image: ci.atalaya.at/containers/docker:stable
