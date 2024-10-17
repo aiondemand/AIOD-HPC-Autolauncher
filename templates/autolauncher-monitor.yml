@@ -13,7 +13,7 @@ variables:
 monitor_mn4:
   image: ci.atalaya.at/containers/docker:stable
   stage: monitor
-  timeout: 15 hours
+  timeout: 96 hours
   dependencies:
     - launch_mn4
   script:
@@ -45,7 +45,7 @@ monitor_mn4:
 monitor_amd:
   image: ci.atalaya.at/containers/docker:stable
   stage: monitor
-  timeout: 15 hours
+  timeout: 96 hours
   dependencies:
     - launch_amd
   script:
@@ -77,7 +77,7 @@ monitor_amd:
 monitor_local:
   image: ci.atalaya.at/containers/docker:stable
   stage: monitor
-  timeout: 15 hours
+  timeout: 96 hours
   dependencies:
     - launch_local
   script:
@@ -120,7 +120,7 @@ monitor_mn5:
         - https://pass.hpai.bsc.es:18200
   image: ci.atalaya.at/containers/cesga:0.0.6
   stage: monitor
-  timeout: 15 hours
+  timeout: 96 hours
   dependencies:
     - launch_mn5
   script:
@@ -150,7 +150,7 @@ monitor_mn5:
 monitor_cesga:
   image: ci.atalaya.at/containers/cesga:0.0.6
   stage: monitor
-  timeout: 15 hours
+  timeout: 96 hours
   dependencies:
     - launch_cesga
   script:
