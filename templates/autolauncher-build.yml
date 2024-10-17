@@ -72,10 +72,10 @@ build_image_mn5:
     - cp ${REQUIREMT_FILE} ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}/tmp/$REQUIREMT_FILE
 
     # steo 7: run pip install inside the sigularity image
-    - singularity exec --writable --fakeroot --nv ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME} /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
+    - singularity exec --writable ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME} /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
 
     # step 8: run the command inside the singularity container
-    - singularity exec --writable --fakeroot --nv ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME} /bin/sh -c "pip freeze > pip_freeze.txt"
+    - singularity exec --writable ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME} /bin/sh -c "pip freeze > pip_freeze.txt"
 
     # step 9: convert to sif format
     - singularity build ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}.sif ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}
