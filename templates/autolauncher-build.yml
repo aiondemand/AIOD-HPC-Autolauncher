@@ -62,7 +62,7 @@ build_image_mn5:
         cd ${JOB_WORKDIR}/autolauncher-output
     
     # Step 4: do the pull of the image on the host if not exists
-    - docker pull docker://${BUILD_IMAGE_NAME}
+    - docker run --privileged ${SINGULARITY_IMAGE} singularity pull docker://${BUILD_IMAGE_NAME}
 
     # Step 5: Build the sandbox image
     - docker run --privileged --volume ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}:/mnt ${SINGULARITY_IMAGE} singularity build --force --sandbox /mnt docker://${BUILD_IMAGE_NAME}
