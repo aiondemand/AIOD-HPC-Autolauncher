@@ -3,6 +3,7 @@ variables:
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     LAUNCH_CONFIG_PATH: configs/config.json
     EXEC_HOSTS_FILE: some_file
+    SINGULARITY_IMAGE: nvcr.io/nvidia/tensorflow:21.03-tf2-py3
     REQUIREMT_FILE: requirements.txt
     LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME} # qi
     TAGS: estufa # mininostrum, estufa or pepino
@@ -34,19 +35,17 @@ build:
   tags: 
     - ${TAGS}
 
-
 build_image_mn5:
   # Usamos la imagen de Singularity como base
-  image: 
-    name: quay.io/singularity/singularity:v3.11.5-slim
-    entrypoint: [""]
+  image: ci.atalaya.at/containers/docker:stable
   stage: build
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
   before_script:
-    - | 
-        apk add --update curl && rm -rf /var/cache/apk/*
-        time apk add bash
-        apk add python3 py3-pip shadow-uidmap
-        pip3 install sregistry[all]
+    - apk add --update curl && rm -rf /var/cache/apk/*
+    - time apk add bash
   script:
     # Step 1: extract the image name from the commit title
     - export BUILD_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
@@ -61,30 +60,18 @@ build_image_mn5:
         mkdir -p ${JOB_WORKDIR}/autolauncher-output
         cp ${REQUIREMT_FILE} ${JOB_WORKDIR}/autolauncher-output
         cd ${JOB_WORKDIR}/autolauncher-output
+    
+    # Step 4: do the pull of the image on the host if not exists
+    - docker pull docker://${BUILD_IMAGE_NAME}
 
-    # Step 4: do the pull of the image on the host
-    - singularity pull docker://${BUILD_IMAGE_NAME}
+    # Step 5: Build the sandbox image
+    - docker run --privileged --volume ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}:/mnt ${SINGULARITY_IMAGE} singularity build --force --sandbox /mnt docker://${BUILD_IMAGE_NAME}
 
-    # Step 5: Build the Singularity image in sandbox mode
-    - singularity build --force --sandbox ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME} docker://${BUILD_IMAGE_NAME}
-
-    # step 6: copy the requirement file to the singularity container (--nv)
+    # step 6: copy the requirement file to the singularity sandbox
     - cp ${REQUIREMT_FILE} ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}/tmp/$REQUIREMT_FILE
 
-    # steo 7: run pip install inside the sigularity image
-    - singularity exec --writable ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME} /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
-
-    # step 8: run the command inside the singularity container
-    - singularity exec --writable ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME} /bin/sh -c "pip freeze > pip_freeze.txt"
-
-    # step 9: convert to sif format
-    - singularity build ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}.sif ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}
-
-    # Step 10: pull the singularity image to the singularity registry
-    # - sregistry push --name ${LAUNCH_IMAGE_NAME} ${JOB_WORKDIR}/${LAUNCH_IMAGE_NAME}
-
-    # Step 10a: pull the singulaity image to the docker registry
-    - singularity build --docker-login --remote docker://${LAUNCH_IMAGE_NAME} ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}
+    # Step 5: Build the singularity image using the docker image using impesonation docker call
+    - docker run --privileged --volume ${JOB_WORKDIR}/${BUILDING_IMAGE_NAME}:/mnt ${SINGULARITY_IMAGE}  singularity exec --writable --nv /mnt /bin/sh -c "pip install -r /tmp/$REQUIREMT_FILE"
   artifacts:
     paths:
       - autolauncher-output/output
@@ -93,40 +80,4 @@ build_image_mn5:
     - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5.*$/
     - when: never
   tags:
-    - estufa
-
-update_image_mn5:
-  image:
-    name: quay.io/singularity/singularity:v3.11.5-slim
-    entrypoint: [""]
-  stage: build
-  script:
-    # get image to use from commit title
-    - export UPDATE_IMAGE_NAME=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
-    - 'echo "The update image is: $UPDATE_IMAGE_NAME"'
-    
-    # Define the working directory
-    - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_COMMIT_SHORT_SHA}
-    - mkdir -p ${JOB_WORKDIR}/autolauncher-output && cd ${JOB_WORKDIR}/autolauncher-output
-
-    # step 1: download from path
-    - singularity build --sandbox ${JOB_WORKDIR}/${UPDATE_IMAGE_NAME} docker://${UPDATE_IMAGE_NAME}
-
-    # step 2: copy the install.sh script to the singularity container
-    - cp ./$EXEC_HOSTS_FILE /tmp/$EXEC_HOSTS_FILE
-
-    # step 3: run the install.sh script
-    - singularity exec --writable ${JOB_WORKDIR}/${UPDATE_IMAGE_NAME} /bin/sh /tmp/$EXEC_HOSTS_FILE
-
-    # step 4: check the installed packages
-    - singularity exec ${JOB_WORKDIR}/${UPDATE_IMAGE_NAME} dpkg -l > installed_packages.txt
-  artifacts:
-    paths:
-      - autolauncher-output/output
-    expire_in: 1 week
-  rules:
-    - if: $CI_COMMIT_TITLE =~ /^UPDATE_IMAGE_MN5.*$/
-    - when: never
-  tags:
-    - privileged
     - estufa
