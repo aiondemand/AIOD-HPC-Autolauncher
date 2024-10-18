@@ -3,7 +3,7 @@ variables:
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     LAUNCH_CONFIG_PATH: configs/config.json
     EXEC_HOSTS_FILE: some_file
-    SINGULARITY_IMAGE: nvcr.io/nvidia/tensorflow:21.03-tf2-py3
+    SINGULARITY_IMAGE: quay.io/singularity/singularity:v3.11.5-slim 
     REQUIREMT_FILE: requirements.txt
     LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME} # qi
     TAGS: estufa # mininostrum, estufa or pepino
