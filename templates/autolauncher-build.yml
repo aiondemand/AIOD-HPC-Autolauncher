@@ -35,7 +35,9 @@ build:
     - ${TAGS}
 
 build_image_mn5:
-  image: ${SINGULARITY_IMAGE}
+  image:
+    name: ${SINGULARITY_IMAGE}
+    entrypoint: [""]
   stage: build
   services:
     - docker:dind
