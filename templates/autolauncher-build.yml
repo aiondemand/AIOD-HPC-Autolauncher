@@ -64,7 +64,7 @@ build_image_mn5:
 
     # Step 4: Build the Singularity image from the .def file
     #- docker run --privileged --rm -v ${JOB_WORKDIR}:/tmp ${SINGULARITY_IMAGE} build /tmp/${BUILD_IMAGE_NAME}.sif /tmp/${DEF_FILE}
-    - docker run --rm -v /gpfs/projects/bsc70/hpai/storage/data/orlando/autolauncher-test:/tmp ci.atalaya.at/containers/docker:stable ls -la /tmp
+    - docker run --rm --volume /gpfs/projects/bsc70/hpai/storage/data/orlando/autolauncher-test:/tmp ci.atalaya.at/containers/docker:stable ls -la /tmp
 
     # Step 5: Verify the image was created
     - if [ -f ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ]; then echo "Image created successfully"; else echo "Image creation failed"; exit 1; fi
