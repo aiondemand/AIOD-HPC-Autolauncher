@@ -62,7 +62,7 @@ build_image_mn5:
     - echo "The Singularity image will be named $BUILD_IMAGE_NAME"
 
     # Step 4: Build the Singularity image from the .def file
-    - singularity build ${BUILD_IMAGE_NAME}.sif ${DEF_FILE}
+    - singularity build --fakeroot --no-home ${BUILD_IMAGE_NAME}.sif ${DEF_FILE}
 
     # Step 5: Verify the image was created
     - if [ -f ${BUILD_IMAGE_NAME}.sif ]; then echo "Image created successfully"; else echo "Image creation failed"; exit 1; fi
