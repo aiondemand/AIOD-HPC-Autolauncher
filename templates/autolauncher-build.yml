@@ -37,7 +37,7 @@ build:
 
 build_image_mn5:
   image:
-    name: ${SINGULARITY_IMAGE}
+    name: ci.atalaya.at/containers/docker:stable
   stage: build
   services:
     - docker:dind
@@ -68,8 +68,8 @@ build_image_mn5:
     - if [ -f ${BUILD_IMAGE_NAME}.sif ]; then echo "Image created successfully"; else echo "Image creation failed"; exit 1; fi
 
     # Step 6: Convert the Singularity image to Docker format and push it to Docker registry
-    - singularity build docker-daemon://${BUILD_IMAGE_NAME}:latest ${BUILD_IMAGE_NAME}.sif
-    - docker push ${DOCKER_REGISTRY}/${BUILD_IMAGE_NAME}:latest
+    - docker run --privileged --rm -v ${JOB_WORKDIR}:/mnt build docker-daemon://${BUILD_IMAGE_NAME}:latest /mnt/${BUILD_IMAGE_NAME}.sif
+    #- docker push ${DOCKER_REGISTRY}/${BUILD_IMAGE_NAME}:latest
   artifacts:
     paths:
       - autolauncher-output/
