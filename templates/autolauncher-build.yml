@@ -36,6 +36,7 @@ build:
 
 build_image_mn5:
   image: ${SINGULARITY_IMAGE}
+  entrypoint: [""]  # Override the default entrypoint
   stage: build
   services:
     - docker:dind
@@ -52,15 +53,15 @@ build_image_mn5:
     # Step 2: Prepare the working directory and copy the .def file
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
     - mkdir -p ${JOB_WORKDIR}/autolauncher-output
-    - cp ${DEF_FILE_PATH}/${DEF_FILE} ${JOB_WORKDIR}/autolauncher-output/Singularity.def
-    - cd ${JOB_WORKDIR}/autolauncher-output
+    - cp ${DEF_FILE} ${JOB_WORKDIR}
+    - cd ${JOB_WORKDIR}
 
     # Step 3: Define the final image name based on .def file or predefined value
     - export BUILD_IMAGE_NAME="${DEF_FILE%.def}"  # Remove .def extension for image name
     - echo "The Singularity image will be named $BUILD_IMAGE_NAME"
 
     # Step 4: Build the Singularity image from the .def file
-    - singularity build ${BUILD_IMAGE_NAME}.sif Singularity.def
+    - singularity build ${BUILD_IMAGE_NAME}.sif ${DEF_FILE}
 
     # Step 5: Verify the image was created
     - if [ -f ${BUILD_IMAGE_NAME}.sif ]; then echo "Image created successfully"; else echo "Image creation failed"; exit 1; fi
