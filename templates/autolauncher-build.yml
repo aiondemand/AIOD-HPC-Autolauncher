@@ -36,14 +36,13 @@ build:
 
 build_image_mn5:
   image: ${SINGULARITY_IMAGE}
-  entrypoint: [""]  # Override the default entrypoint
   stage: build
   services:
     - docker:dind
   variables:
     DOCKER_DRIVER: overlay2
   before_script:
-    - apk add --update curl && rm -rf /var/cache/apk/*
+    - apk add --no-cache curl bash
     - time apk add bash
   script:
     # Step 1: Extract the .def file name from the commit title
