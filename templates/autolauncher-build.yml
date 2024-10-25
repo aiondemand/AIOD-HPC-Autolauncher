@@ -47,7 +47,7 @@ build_image_mn5:
   script:
     # Step 1: Extract the .def file name from the commit title
     - export DEF_FILE=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
-    - echo "The .def file is $DEF_FILE"
+    - echo "The .def file is ${DEF_FILE}"
     
     # Step 2: Prepare the working directory and copy the .def file
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
