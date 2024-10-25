@@ -61,7 +61,7 @@ build_image_mn5:
     - echo "The Singularity image will be named $BUILD_IMAGE_NAME"
 
     # Step 4: Build the Singularity image from the .def file
-    - docker run --privileged --rm -v ${JOB_WORKDIR}:/mnt ${SINGULARITY_IMAGE} /bin/bash -c "singularity build --writable /mnt/${BUILD_IMAGE_NAME}.sif /mnt/${DEF_FILE}"
+    - docker run --privileged --rm -v ${JOB_WORKDIR}:/mnt ${SINGULARITY_IMAGE} singularity build --writable /mnt/${BUILD_IMAGE_NAME}.sif /mnt/${DEF_FILE}
 
     # Step 5: Verify the image was created
     - if [ -f ${BUILD_IMAGE_NAME}.sif ]; then echo "Image created successfully"; else echo "Image creation failed"; exit 1; fi
