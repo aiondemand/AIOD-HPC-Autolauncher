@@ -55,22 +55,21 @@ build_image_mn5:
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
     - mkdir -p ${JOB_WORKDIR}/autolauncher-output
     - cp ${DEF_FILE} ${JOB_WORKDIR}
-    - cd ${JOB_WORKDIR}
-    - echo "files directory is $JOB_WORKDIR" && ls -la
+    #- cd ${JOB_WORKDIR}
+    #- echo "files directory is $JOB_WORKDIR" && ls -la
 
     # Step 3: Define the final image name based on .def file or predefined value
     - export BUILD_IMAGE_NAME="${DEF_FILE%.def}"  # Remove .def extension for image name
     - echo "The Singularity image will be named $BUILD_IMAGE_NAME"
 
     # Step 4: Build the Singularity image from the .def file
-    - docker run --privileged --rm -v ${JOB_WORKDIR}:/mnt ${SINGULARITY_IMAGE}  exec /bin/sh -c "ls -la /mnt && singularity build /mnt/${BUILD_IMAGE_NAME}.sif /mnt/${DEF_FILE}"
-
+    - docker run --privileged --rm -v ${JOB_WORKDIR}:/tmp ${SINGULARITY_IMAGE} build /tmp/${BUILD_IMAGE_NAME}.sif /tmp/${DEF_FILE}
 
     # Step 5: Verify the image was created
-    - if [ -f ${BUILD_IMAGE_NAME}.sif ]; then echo "Image created successfully"; else echo "Image creation failed"; exit 1; fi
+    - if [ -f ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ]; then echo "Image created successfully"; else echo "Image creation failed"; exit 1; fi
 
     # Step 6: Convert the Singularity image to Docker format and push it to Docker registry
-    - docker run --privileged --rm -v ${JOB_WORKDIR}:/mnt build docker-daemon://${BUILD_IMAGE_NAME}:latest /mnt/${BUILD_IMAGE_NAME}.sif
+    - docker run --privileged --rm -v ${JOB_WORKDIR}:/tmp build docker-daemon://${BUILD_IMAGE_NAME}:latest /tmp/${BUILD_IMAGE_NAME}.sif
     #- docker push ${DOCKER_REGISTRY}/${BUILD_IMAGE_NAME}:latest
   artifacts:
     paths:
