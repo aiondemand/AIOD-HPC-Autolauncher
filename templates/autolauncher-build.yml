@@ -60,20 +60,20 @@ build_image_mn5:
     - echo "The Singularity image will be named $BUILD_IMAGE_NAME"
 
     # Step 4: Build the Singularity image from the .def file
-    # - docker run --privileged --volume ${JOB_WORKDIR}:/mnt ${SINGULARITY_IMAGE} singularity build /mnt/${BUILD_IMAGE_NAME}.sif /mnt/${DEF_FILE}
+    - docker run --privileged --volume ${JOB_WORKDIR}:/mnt ${SINGULARITY_IMAGE} singularity build /mnt/${BUILD_IMAGE_NAME}.sif /mnt/${DEF_FILE}
 
     # # Step 5: Verify the image was created
-    # - if [ -f ${JOB_WORKDIR}/autolauncher-output/${BUILD_IMAGE_NAME}.sif ]; then echo "Image created successfully"; else echo "Image creation failed"; exit 1; fi
+    - if [ -f ${JOB_WORKDIR}/autolauncher-output/${BUILD_IMAGE_NAME}.sif ]; then echo "Image created successfully"; else echo "Image creation failed"; exit 1; fi
 
     # # Step 6: Convert the Singularity image to Docker format and push it to Docker registry
-    # - docker run --privileged --volume ${JOB_WORKDIR}/autolauncher-output:/mnt ${SINGULARITY_IMAGE} singularity build docker-daemon://${BUILD_IMAGE_NAME}:latest /mnt/${BUILD_IMAGE_NAME}.sif
-    # - docker push ${DOCKER_REGISTRY}/${BUILD_IMAGE_NAME}:latest
+    - docker run --privileged --volume ${JOB_WORKDIR}/autolauncher-output:/mnt ${SINGULARITY_IMAGE} singularity build docker-daemon://${BUILD_IMAGE_NAME}:latest /mnt/${BUILD_IMAGE_NAME}.sif
+    - docker push ${DOCKER_REGISTRY}/${BUILD_IMAGE_NAME}:latest
   artifacts:
     paths:
       - autolauncher-output/
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5.*$/
-      when: never
+    - when: never
   tags:
     - estufa
