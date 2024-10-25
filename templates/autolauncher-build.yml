@@ -44,8 +44,8 @@ build_image_mn5:
   variables:
     DOCKER_DRIVER: overlay2
   before_script:
-    - apk add --no-cache curl bash
-    - time apk add bash
+    - apk add --update curl && rm -rf /var/cache/apk/*
+    - time apk add bash shadow
   script:
     # Step 1: Extract the .def file name from the commit title
     - export DEF_FILE=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
