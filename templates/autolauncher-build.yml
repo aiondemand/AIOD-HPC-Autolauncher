@@ -74,7 +74,7 @@ build_image_mn5:
     - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/
 
     # Step 6: Convert the Singularity image to Docker format and push it to Docker registry
-    - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data build docker-daemon://${BUILD_IMAGE_NAME}:latest /data/${BUILD_IMAGE_NAME}.sif
+    - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data ${SINGULARITY_IMAGE} build docker-daemon://${BUILD_IMAGE_NAME}:latest /data/${BUILD_IMAGE_NAME}.sif
     #- docker push ${DOCKER_REGISTRY}/${BUILD_IMAGE_NAME}:latest
 
     - docker stop aux_runner_${CI_COMMIT_SHORT_SHA}
