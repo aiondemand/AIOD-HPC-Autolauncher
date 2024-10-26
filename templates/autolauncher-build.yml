@@ -58,15 +58,13 @@ build_image_mn5:
     - cd ${JOB_WORKDIR}
     - echo "files directory is $JOB_WORKDIR" && ls -la
 
-    - docker volume create --driver local --opt type=none --opt device=${JOB_WORKDIR} --opt o=bind auto_launcher
-
     # Step 3: Define the final image name based on .def file or predefined value
     - export BUILD_IMAGE_NAME="${DEF_FILE%.def}"  # Remove .def extension for image name
     - echo "The Singularity image will be named $BUILD_IMAGE_NAME"
 
     # Step 4: Build the Singularity image from the .def file
     #- docker run --privileged --rm -v ${JOB_WORKDIR}:/tmp ${SINGULARITY_IMAGE} build /tmp/${BUILD_IMAGE_NAME}.sif /tmp/${DEF_FILE}
-    - docker run --privileged --rm --mount source=auto_launcher,target=/mnt ci.atalaya.at/containers/docker:stable ls -la /mnt
+    - docker run --privileged --rm -v ${JOB_WORKDIR}:/data ci.atalaya.at/containers/docker:stable ls -la /data
 
     # Step 5: Verify the image was created
     - if [ -f ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ]; then echo "Image created successfully"; else echo "Image creation failed"; exit 1; fi
