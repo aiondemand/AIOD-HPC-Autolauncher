@@ -56,29 +56,29 @@ build_image_mn5:
     - mkdir -p ${JOB_WORKDIR}/autolauncher-output
     - cp ${DEF_FILE} ${JOB_WORKDIR}
     - cd ${JOB_WORKDIR}
-    - echo "files directory is $JOB_WORKDIR" && ls -la
 
     # Step 3: Define the final image name based on .def file or predefined value
     - export BUILD_IMAGE_NAME="${DEF_FILE%.def}"  # Remove .def extension for image name
     - echo "The Singularity image will be named $BUILD_IMAGE_NAME"
 
+    # Step 4: Create aux volume and copy required files
     - docker volume create vol_al_${CI_COMMIT_SHORT_SHA}
     - docker run -d --name aux_runner_${CI_COMMIT_SHORT_SHA} -v vol_al_${CI_COMMIT_SHORT_SHA}:/data alpine sleep infinity
     - docker cp ${DEF_FILE} aux_runner_${CI_COMMIT_SHORT_SHA}:/data/
     - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/
-    - docker stop aux_runner_${CI_COMMIT_SHORT_SHA}
-    - docker rm aux_runner_${CI_COMMIT_SHORT_SHA}
-
-    # Step 4: Build the Singularity image from the .def file
-    #- docker run --privileged --rm -v ${JOB_WORKDIR}:/tmp ${SINGULARITY_IMAGE} build /tmp/${BUILD_IMAGE_NAME}.sif /tmp/${DEF_FILE}
-    - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data ci.atalaya.at/containers/docker:stable ls -la /data 
+    
+    # Step 5: Build the Singularity image from the .def file
+    - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data ${SINGULARITY_IMAGE} build /data/${BUILD_IMAGE_NAME}.sif /data/${DEF_FILE}
     
     # Step 5: Verify the image was created
-    - if [ -f ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ]; then echo "Image created successfully"; else echo "Image creation failed"; exit 1; fi
+    - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} if [ -f /data/${BUILD_IMAGE_NAME}.sif ]; then echo "Image created successfully"; else echo "Image creation failed"; exit 1; fi
 
     # Step 6: Convert the Singularity image to Docker format and push it to Docker registry
-    - docker run --privileged --rm -v ${JOB_WORKDIR}:/tmp build docker-daemon://${BUILD_IMAGE_NAME}:latest /tmp/${BUILD_IMAGE_NAME}.sif
+    - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data build docker-daemon://${BUILD_IMAGE_NAME}:latest /data/${BUILD_IMAGE_NAME}.sif
     #- docker push ${DOCKER_REGISTRY}/${BUILD_IMAGE_NAME}:latest
+
+    - docker stop aux_runner_${CI_COMMIT_SHORT_SHA}
+    - docker rm aux_runner_${CI_COMMIT_SHORT_SHA}
   artifacts:
     paths:
       - autolauncher-output/
