@@ -70,14 +70,19 @@ build_image_mn5:
     # Step 5: Build the Singularity image from the .def file
     - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data ${SINGULARITY_IMAGE} build /data/${BUILD_IMAGE_NAME}.sif /data/${DEF_FILE}
     
-    # Step 5: Verify the image was created
+    # Step 6: Verify the image was created
     - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/
 
-    # Step 6: Convert the Singularity image to Docker format and push it to Docker registry
-    - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data -v /var/run/docker.sock:/var/run/docker.sock ${SINGULARITY_IMAGE} build docker-daemon://${BUILD_IMAGE_NAME}:latest /data/${BUILD_IMAGE_NAME}.sif
+    # Step 7: Convert the Singularity image to Docker format and push it to Docker registry
+    - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data ${SINGULARITY_IMAGE} sif2dir /data/${BUILD_IMAGE_NAME}.sif /data/
     
-    #- docker push ${DOCKER_REGISTRY}/${BUILD_IMAGE_NAME}:latest
+    # Step 8: Verify the image was created
+    - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/
 
+    # Step 9: push the image to the docker registry
+    - docker exec -it aux_runner_${CI_COMMIT_SHORT_SHA} /bin/sh -c "docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ci.atalaya.at && docker build -t ci.atalaya.at/${LAUNCH_IMAGE_NAME} -f containers/Dockerfile-${LAUNCH_TARGET}${DOCKERFILE_TAG} . && docker push ci.atalaya.at/${LAUNCH_IMAGE_NAME}"
+    
+    # Step 10: delete the aux volume and container
     - docker stop aux_runner_${CI_COMMIT_SHORT_SHA}
     - docker rm aux_runner_${CI_COMMIT_SHORT_SHA}
   artifacts:
