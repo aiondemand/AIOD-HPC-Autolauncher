@@ -62,9 +62,16 @@ build_image_mn5:
     - export BUILD_IMAGE_NAME="${DEF_FILE%.def}"  # Remove .def extension for image name
     - echo "The Singularity image will be named $BUILD_IMAGE_NAME"
 
+    - docker volume create vol_al_${CI_COMMIT_SHORT_SHA}
+    - docker run -d --name aux_runner_${CI_COMMIT_SHORT_SHA} -v vol_al_${CI_COMMIT_SHORT_SHA}:/data alpine sleep infinity
+    - docker cp ${DEF_FILE} aux_runner_${CI_COMMIT_SHORT_SHA}:/data/
+    - docker exec -it aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/
+    - docker stop aux_runner_${CI_COMMIT_SHORT_SHA}
+    - docker rm aux_runner_${CI_COMMIT_SHORT_SHA}
+
     # Step 4: Build the Singularity image from the .def file
     #- docker run --privileged --rm -v ${JOB_WORKDIR}:/tmp ${SINGULARITY_IMAGE} build /tmp/${BUILD_IMAGE_NAME}.sif /tmp/${DEF_FILE}
-    - docker run --privileged --rm --mount type=bind,source=/gpfs/projects/bsc70/hpai/storage/data/orlando/autolauncher-test,target=/data,bind-propagation=rshared ci.atalaya.at/containers/docker:stable ls -la /data 
+    - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data ci.atalaya.at/containers/docker:stable ls -la /data 
     
     # Step 5: Verify the image was created
     - if [ -f ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ]; then echo "Image created successfully"; else echo "Image creation failed"; exit 1; fi
