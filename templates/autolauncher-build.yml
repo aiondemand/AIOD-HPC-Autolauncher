@@ -65,7 +65,7 @@ build_image_mn5:
     - docker volume create vol_al_${CI_COMMIT_SHORT_SHA}
     - docker run -d --name aux_runner_${CI_COMMIT_SHORT_SHA} -v vol_al_${CI_COMMIT_SHORT_SHA}:/data alpine sleep infinity
     - docker cp ${DEF_FILE} aux_runner_${CI_COMMIT_SHORT_SHA}:/data/
-    - docker exec -it aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/
+    - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/
     - docker stop aux_runner_${CI_COMMIT_SHORT_SHA}
     - docker rm aux_runner_${CI_COMMIT_SHORT_SHA}
 
