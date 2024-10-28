@@ -48,9 +48,10 @@ build_image_mn5:
     - time apk add bash shadow
   script:
     # Step 1: Extract the .def file name from the commit title
+    - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
     - export DEF_FILE=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
     - echo "The .def file is $DEF_FILE"
-    
+
     # Step 2: Prepare the working directory and copy the .def file
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
     - mkdir -p ${JOB_WORKDIR}/autolauncher-output
@@ -58,39 +59,123 @@ build_image_mn5:
     - cd ${JOB_WORKDIR}
 
     # Step 3: Define the final image name based on .def file or predefined value
-    - export BUILD_IMAGE_NAME="${DEF_FILE%.def}"  # Remove .def extension for image name
+    - export BUILD_IMAGE_NAME="${LAUNCH_IMAGE_NAME}"
     - echo "The Singularity image will be named $BUILD_IMAGE_NAME"
 
     # Step 4: Create aux volume and copy required files
     - docker volume create vol_al_${CI_COMMIT_SHORT_SHA}
     - docker run -d --name aux_runner_${CI_COMMIT_SHORT_SHA} -v vol_al_${CI_COMMIT_SHORT_SHA}:/data alpine sleep infinity
     - docker cp ${DEF_FILE} aux_runner_${CI_COMMIT_SHORT_SHA}:/data/
-    - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/
-    
-    # Step 5: Build the Singularity image from the .def file
-    - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data ${SINGULARITY_IMAGE} build /data/${BUILD_IMAGE_NAME}.sif /data/${DEF_FILE}
-    
-    # Step 6: Verify the image was created
-    - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/
 
-    # Step 7: Convert the Singularity image to Docker format and push it to Docker registry
-    - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data ${SINGULARITY_IMAGE} sif2dir /data/${BUILD_IMAGE_NAME}.sif /data/
-    
-    # Step 8: Verify the image was created
-    - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/
+    # Step 5: Build the Singularity image from the .def file and save output logs
+    - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data ${SINGULARITY_IMAGE} build /data/${BUILD_IMAGE_NAME}.sif /data/${DEF_FILE} > ${JOB_WORKDIR}/autolauncher-output/build_output.log 2> ${JOB_WORKDIR}/autolauncher-output/build_error.log
 
-    # Step 9: push the image to the docker registry
-    - docker exec -it aux_runner_${CI_COMMIT_SHORT_SHA} /bin/sh -c "docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ci.atalaya.at && docker build -t ci.atalaya.at/${LAUNCH_IMAGE_NAME} -f containers/Dockerfile-${LAUNCH_TARGET}${DOCKERFILE_TAG} . && docker push ci.atalaya.at/${LAUNCH_IMAGE_NAME}"
-    
-    # Step 10: delete the aux volume and container
+    # Step 6: Extract pip freeze from the Singularity image environment
+    - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data ${SINGULARITY_IMAGE} exec /data/${BUILD_IMAGE_NAME}.sif pip freeze > ${JOB_WORKDIR}/autolauncher-output/pip_freeze.txt 2>&1
+
+    # Step 7: Verify the image was created and log the contents of /data again
+    - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/ > ${JOB_WORKDIR}/autolauncher-output/ls_output.log 2>&1
+
+    # Step 8: Copy .def and .sif files from aux volume to the artifacts directory
+    - docker cp aux_runner_${CI_COMMIT_SHORT_SHA}:/data/${DEF_FILE} ${JOB_WORKDIR}/
+    - docker cp aux_runner_${CI_COMMIT_SHORT_SHA}:/data/${BUILD_IMAGE_NAME}.sif ${JOB_WORKDIR}/
+
+    # Step 9: Delete the aux volume and container
     - docker stop aux_runner_${CI_COMMIT_SHORT_SHA}
     - docker rm aux_runner_${CI_COMMIT_SHORT_SHA}
+    - docker volume rm vol_al_${CI_COMMIT_SHORT_SHA}
   artifacts:
     paths:
       - autolauncher-output/
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5.*$/
+    - when: never
+  tags:
+    - estufa
+
+
+update_image_mn5:
+  image:
+    name: ci.atalaya.at/containers/docker:stable
+  stage: build
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+    - time apk add bash shadow
+  script:
+    # Step 1: Extract the .def file name and base image information from the commit title
+    - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
+    - export IMAGE_BASE=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
+    - export BASH_FILE=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g' | sed 's/\.def/.sh/g')
+    - echo "The image base is $IMAGE_BASE"
+    - echo "The bash file is $BASH_FILE"
+
+    # Step 2: Prepare the working directory and copy necessary files
+    - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
+    - mkdir -p ${JOB_WORKDIR}/autolauncher-output
+    - cp ${BASH_FILE} ${JOB_WORKDIR}
+    - cd ${JOB_WORKDIR}
+
+    # Step 3: Define the final image name and base GPFS image path
+    - export BUILD_IMAGE_NAME="${LAUNCH_IMAGE_NAME}"
+    - export REGISTRY_IMAGE="${REGISTRY_URL}/${IMAGE_BASE}"
+    - echo "The Singularity image will be named $BUILD_IMAGE_NAME"
+
+    # Step 4: Create aux volume and prepare for transfers
+    - docker volume create vol_al_${CI_COMMIT_SHORT_SHA}
+    - docker run -d --name aux_runner_${CI_COMMIT_SHORT_SHA} -v vol_al_${CI_COMMIT_SHORT_SHA}:/data alpine sleep infinity
+
+    # Step 5: Check if base image exists in GPFS, if not pull from registry
+    - >-
+      if [ ! -f "$GPFS_IMAGE_PATH" ]; then
+        echo "Image not found in GPFS, pulling from registry...";
+        docker pull "${REGISTRY_IMAGE}" || echo "Failed to pull image from registry";
+
+        # Check if rsync can be executed from node4 or fall back to OpenStack
+        if [ "$(hostname)" == "node4" ]; then
+          echo "Running on node4, attempting rsync from OpenStack...";
+          rsync -av --progress ${REGISTRY_IMAGE} ${JOB_WORKDIR}/gpfs/scratch || echo "Failed to rsync from OpenStack";
+        else
+          echo "Pulling and transferring image from OpenStack instead";
+          docker save ${REGISTRY_IMAGE} | docker run --privileged -v vol_al_${CI_COMMIT_SHORT_SHA}:/data -i alpine tar -xvf - -C /data
+        fi
+      else
+        echo "Image exists in GPFS at ${GPFS_IMAGE_PATH}";
+      fi
+
+    # Step 6: Convert to sandbox format and execute image.sh
+    - docker run --privileged --rm -v ${GPFS_IMAGE_PATH}:/data ${SINGULARITY_IMAGE} build --sandbox /data/sandbox /data/${BUILD_IMAGE_NAME}.sif
+    - echo "Sandbox created successfully, executing image.sh..."
+    - docker run --privileged --rm -v ${GPFS_IMAGE_PATH}:/data ${SINGULARITY_IMAGE} exec -it /data/sandbox /data/$BASH_FILE || echo "Execution of $BASH_FILE failed"
+
+    # Step 7: Save the updated image back to GPFS with metadata
+    - docker run --privileged --rm -v ${GPFS_IMAGE_PATH}:/data ${SINGULARITY_IMAGE} build /data/${BUILD_IMAGE_NAME}.sif /data/sandbox
+
+    # Step 8: Extract pip freeze from the updated Singularity image environment
+    - docker run --privileged --rm -v vol_al_${CI_COMMIT_SHORT_SHA}:/data ${SINGULARITY_IMAGE} exec /data/${BUILD_IMAGE_NAME}.sif pip freeze > ${JOB_WORKDIR}/autolauncher-output/pip_freeze.txt 2>&1
+    - cat ${JOB_WORKDIR}/autolauncher-output/pip_freeze.txt # Show in logs
+
+    # Step 9: Verify the image was created and log the contents of /data again
+    - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/ > ${JOB_WORKDIR}/autolauncher-output/ls_output.log 2>&1
+
+    # Step 10: Copy .def, .sif, and logs to the artifacts directory
+    - mkdir -p ${JOB_WORKDIR}/artifacts
+    - docker cp aux_runner_${CI_COMMIT_SHORT_SHA}:/data/${DEF_FILE} ${JOB_WORKDIR}/artifacts/
+    - docker cp aux_runner_${CI_COMMIT_SHORT_SHA}:/data/${BUILD_IMAGE_NAME}.sif ${JOB_WORKDIR}/artifacts/
+
+    # Step 11: Clean up by deleting the aux volume and container
+    - docker stop aux_runner_${CI_COMMIT_SHORT_SHA}
+    - docker rm aux_runner_${CI_COMMIT_SHORT_SHA}
+    - docker volume rm vol_al_${CI_COMMIT_SHORT_SHA}
+
+  artifacts:
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^UPDATE_IMAGE_MN5.*$/
     - when: never
   tags:
     - estufa
