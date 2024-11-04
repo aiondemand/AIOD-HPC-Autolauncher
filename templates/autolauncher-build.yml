@@ -45,7 +45,7 @@ build_image_mn5:
     DOCKER_DRIVER: overlay2
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
-    - time apk add bash shadow ssh openssh-client rsync
+    - time apk add bash shadow ssh openssh rsync
   script:
     # Step 1: Extract the .def file name from the commit title
     - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
