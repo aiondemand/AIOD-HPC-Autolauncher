@@ -56,8 +56,8 @@ build_image_mn5:
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
     - mkdir -p ~/.ssh/
     - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/ssh-key
-    - ssh-keygen -p -m PEM -f ~/.ssh/ssh-key
     - chmod 0600 ~/.ssh/ssh-key
+    - ssh-keygen -p -m PEM -f ~/.ssh/ssh-key
     - ssh-keyscan -4H ${OPENSTACK_HOST} > ~/.ssh/known_hosts
     
     # Step 3: Prepare the working on remote directory and copy the .def file
