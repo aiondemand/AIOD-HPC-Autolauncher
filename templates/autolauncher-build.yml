@@ -45,7 +45,7 @@ build_image_mn5:
     DOCKER_DRIVER: overlay2
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
-    - time apk add bash shadow openssh-client rsync
+    - time apk add bash shadow ssh openssh-client rsync
   script:
     # Step 1: Extract the .def file name from the commit title
     - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
@@ -57,11 +57,12 @@ build_image_mn5:
     - mkdir -p ~/.ssh/
     - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H ${OPENSTACK_HOST} >> ~/.ssh/known_hosts
     
     # Step 3: Prepare the working on remote directory and copy the .def file
     - export OPENSTACK_USER="${OPENSTACK_USER//_/}"
-    - ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /root/.ssh/id_rsa ${OPENSTACK_USER}@${OPENSTACK_HOST} "mkdir -p ${JOB_WORKDIR}/autolauncher-output"
-    - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /root/.ssh/id_rsa ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${JOB_WORKDIR}/
+    - ssh -o StrictHostKeyChecking=no -i /root/.ssh/id_rsa ${OPENSTACK_USER}@${OPENSTACK_HOST} "mkdir -p ${JOB_WORKDIR}/autolauncher-output"
+    - scp -o StrictHostKeyChecking=no -i /root/.ssh/id_rsa ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${JOB_WORKDIR}/
 
     # Step 4: Define the final image name based on .def file or predefined value
     - export BUILD_IMAGE_NAME="${LAUNCH_IMAGE_NAME}"
