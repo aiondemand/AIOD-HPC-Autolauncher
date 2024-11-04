@@ -55,7 +55,7 @@ build_image_mn5:
     # Step 2: Connect to OpenStack copy the ssh key from secrets, decode key and do the ssh connection
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
     - mkdir -p ~/.ssh/
-    - echo ${OPENSTACK_KEY} | base64 --decode > ~/.ssh/id_rsa
+    - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - echo ~/.ssh/id_rsa
     - ssh-keyscan -4H ${OPENSTACK_HOST} >> ~/.ssh/known_hosts
