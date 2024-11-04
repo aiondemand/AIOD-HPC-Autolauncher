@@ -58,7 +58,7 @@ build_image_mn5:
     - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - export OPENSTACK_HOST=${OPENSTACK_HOST}
-    - ssh-keyscan -4 -H ${OPENSTACK_HOST} >> ~/.ssh/known_hosts
+    - ssh-keyscan -4H ${OPENSTACK_HOST} >> ~/.ssh/known_hosts
     
     # Step 3: Prepare the working on remote directory and copy the .def file
     - export OPENSTACK_USER="${OPENSTACK_USER//_/}"
