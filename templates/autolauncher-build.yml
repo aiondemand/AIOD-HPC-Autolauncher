@@ -57,12 +57,12 @@ build_image_mn5:
     - mkdir -p ~/.ssh/
     - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan -4H ${OPENSTACK_HOST} > ~/.ssh/known_hosts
+    - ssh-keyscan -4H 84.88.189.206 > ~/.ssh/known_hosts
     
     # Step 3: Prepare the working on remote directory and copy the .def file
     - export OPENSTACK_USER="${OPENSTACK_USER//_/}"
-    - ssh -o StrictHostKeyChecking=no -i /root/.ssh/id_rsa ${OPENSTACK_USER}@${OPENSTACK_HOST} "mkdir -p ${JOB_WORKDIR}/autolauncher-output"
-    - scp -o StrictHostKeyChecking=no -i /root/.ssh/id_rsa ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${JOB_WORKDIR}/
+    - ssh -i /root/.ssh/id_rsa ${OPENSTACK_USER}@${OPENSTACK_HOST} "mkdir -p ${JOB_WORKDIR}/autolauncher-output"
+    - scp -i /root/.ssh/id_rsa ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${JOB_WORKDIR}/
 
     # Step 4: Define the final image name based on .def file or predefined value
     - export BUILD_IMAGE_NAME="${LAUNCH_IMAGE_NAME}"
