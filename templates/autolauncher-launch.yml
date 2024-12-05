@@ -189,7 +189,7 @@ launch_leonardo:
     - chmod 400 ~/.ssh/leonardo-key*
     - eval $(ssh-agent)
     - echo ${PARAPHRASE} | SSH_ASKPASS=/bin/cat setsid -w ssh-add ~/.ssh/leonardo-key
-    - PROJECT_DIR=/leonardo_work/EUHPC_D04_019/pipelines/${CI_PROJECT_NAME}
+    - PROJECT_DIR=/leonardo_work/EUHPC_A01_083/pipelines/${CI_PROJECT_NAME}
     - JOB_WORKDIR=${PROJECT_DIR}/${CI_COMMIT_SHORT_SHA}
     - LAUNCH_COMMAND=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
     - echo "[Info] Job directory -> ${JOB_WORKDIR}" && echo "[Info] Launching file -> ${LAUNCH_COMMAND}"

@@ -188,7 +188,7 @@ monitor_leonardo:
     - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=$GITLAB_USER_LOGIN-read-only jwt=$CI_JOB_JWT)"
     - LEONARDO_USER=$(vault kv get --field=LEONARDO_USER secret/gitlab-ci/leonardo/$GITLAB_USER_LOGIN)
     - git clone -b "${AUTOLAUNCHER_VERSION}" --depth 1 https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.hpai.bsc.es/hpai/autolauncher.git /tmp/autolauncher
-    - PROJECT_DIR=/leonardo_work/EUHPC_D04_019/pipelines/${CI_PROJECT_NAME}
+    - PROJECT_DIR=/leonardo_work/EUHPC_A01_083/pipelines/${CI_PROJECT_NAME}
     - JOB_WORKDIR=${PROJECT_DIR}/${CI_COMMIT_SHORT_SHA}
     - JOB_PID=$(grep -Eo '[0-9]+' job.info)   
     - mkdir ~/.ssh
