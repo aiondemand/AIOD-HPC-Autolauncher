@@ -210,4 +210,4 @@ launch_leonardo:
       - job.info
     expire_in: 1 week
   tags: 
-    - estufa
+    - ${TAGS}

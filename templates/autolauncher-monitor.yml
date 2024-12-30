@@ -216,4 +216,4 @@ monitor_leonardo:
     - job: launch_leonardo
       artifacts: true
   tags: 
-    - estufa
+    - ${TAGS}
