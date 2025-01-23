@@ -79,7 +79,7 @@ build_image_mn5:
     # Step 7: Verify the image was created and log the contents of /data again
     - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/ > ${JOB_WORKDIR}/autolauncher-output/ls_output.log 2>&1
 
-    # Step 8: copy artifacts from remote
+    # Step 8: copy artifacts from remote 
     - mkdir -p autolauncher-output
     - scp -o StrictHostKeyChecking=no -i /root/.ssh/id_rsa ${OPENSTACK_USER}@${OPENSTACK_HOST}:${JOB_WORKDIR}/autolauncher-output/* autolauncher-output/
   artifacts:
