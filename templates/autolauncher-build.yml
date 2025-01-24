@@ -56,8 +56,8 @@ build_image_mn5:
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
     - mkdir -p ~/.ssh/
     - chmod 0700 ~/.ssh
-    - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/ssh-key
-    # - echo ${OPENSTACK_KEY} > ~/.ssh/ssh-key
+    # - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/ssh-key
+    - echo ${OPENSTACK_KEY} > ~/.ssh/ssh-key
     - chmod 0600 ~/.ssh/ssh-key
     - cat ~/.ssh/ssh-key
     
