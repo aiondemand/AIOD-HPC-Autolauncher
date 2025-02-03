@@ -61,7 +61,7 @@ build_image_mn5:
     
     # Step 3: Prepare the working on remote directory and copy the .def file
     - export OPENSTACK_USER="${OPENSTACK_USER//_/}"
-    - ssh -vvv -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ubuntu@84.88.189.206 "echo 'We are in' "
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ubuntu@84.88.189.206 "echo 'We are in' "
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "mkdir -p ${JOB_WORKDIR}/autolauncher-output"
     - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${JOB_WORKDIR}/
 
