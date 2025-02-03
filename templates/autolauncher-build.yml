@@ -57,7 +57,6 @@ build_image_mn5:
     - mkdir -p ~/.ssh/
     - chmod 0700 ~/.ssh
     - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/ssh-key
-    - echo -e "" >> ~/.ssh/ssh-key # adds a new line special char
     - chmod 0600 ~/.ssh/ssh-key
     
     # Step 3: Prepare the working on remote directory and copy the .def file
