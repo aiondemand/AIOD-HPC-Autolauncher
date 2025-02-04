@@ -72,7 +72,7 @@ build_image_mn5:
     - echo "The Singularity image will be named $BUILD_IMAGE_NAME"
 
     # Step 5: Build the Singularity image from the .def file and save output logs
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "mkdir -p /mnt/diskS/.cache /mnt/diskS/.temp"
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p /mnt/diskS/.cache /mnt/diskS/.temp"
     - ssh -vvv -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo -E SINGULARITY_TMPDIR='/mnt/diskS/.temp' SINGULARITY_CACHEDIR='/mnt/diskS/.cache' singularity build ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ${JOB_WORKDIR}/${DEF_FILE} > ${JOB_WORKDIR}/autolauncher-output/build_output.log 2> ${JOB_WORKDIR}/autolauncher-output/build_error.log"
 
     # Step 6: Extract pip freeze from the Singularity image environment
