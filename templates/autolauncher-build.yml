@@ -67,7 +67,7 @@ build_image_mn5:
     # Step 3: Prepare the working on remote directory and copy the .def file
     - export OPENSTACK_USER="${OPENSTACK_USER//_/}"
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo apt-get clean"
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p ${JOB_WORKDIR}/autolauncher-output && sudo chmod 777 ${JOB_WORKDIR}/autolauncher_output"
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p ${JOB_WORKDIR}/autolauncher-output && sudo chmod 777 ${JOB_WORKDIR}/autolauncher-output"
     - scp -v -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:/tmp/
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mv /tmp/$(basename ${DEF_FILE}) ${JOB_WORKDIR}"
 
