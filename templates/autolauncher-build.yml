@@ -46,7 +46,7 @@ build_image_mn5:
     - apk add --update curl && rm -rf /var/cache/apk/*
     - time apk add bash shadow openssh rsync
     - export LAUNCH_TARGET_FOLDER=/mnt/diskS/autolauncher # Override the one defined in .gitlab-ci.yml 
-    - export LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME##*/} # This removes the username and slash from the name to avoid conflicts when creating the file
+    - export LAUNCH_IMAGE_NAME=$(echo ${LAUNCH_IMAGE_NAME##*/} | tr ':' '_') # This removes the username and slash from the name to avoid conflicts when creating the file
     - export PROJECT_NAME=${CI_PROJECT_PATH##*/} # This removes the username and slash from the name to avoid conflicts when creating the file
   script:
     # Step 1: Extract the .def file name from the commit title
