@@ -68,7 +68,7 @@ build_image_mn5:
     - export OPENSTACK_USER="${OPENSTACK_USER//_/}"
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo apt-get clean"
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p ${JOB_WORKDIR}/autolauncher-output && sudo chmod 777 ${JOB_WORKDIR}/autolauncher-output"
-    - scp -v -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:/tmp/
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:/tmp/
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mv /tmp/$(basename ${DEF_FILE}) ${JOB_WORKDIR}"
 
     # Step 4: Define the final image name based on .def file or predefined value
@@ -77,10 +77,10 @@ build_image_mn5:
 
     # Step 5: Build the Singularity image from the .def file and save output logs
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p /mnt/diskS/.cache /mnt/diskS/.temp"
-    - ssh -v -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo -E SINGULARITY_TMPDIR='/mnt/diskS/.temp' SINGULARITY_CACHEDIR='/mnt/diskS/.cache' singularity build ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ${JOB_WORKDIR}/${DEF_FILE} > ${JOB_WORKDIR}/autolauncher-output/build_output.log 2> ${JOB_WORKDIR}/autolauncher-output/build_error.log"
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo -E SINGULARITY_TMPDIR='/mnt/diskS/.temp' SINGULARITY_CACHEDIR='/mnt/diskS/.cache' singularity build ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ${JOB_WORKDIR}/${DEF_FILE} > ${JOB_WORKDIR}/autolauncher-output/build_output.log 2> ${JOB_WORKDIR}/autolauncher-output/build_error.log"
 
     # Step 6: Extract pip freeze from the Singularity image environment
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "singularity exec /data/${BUILD_IMAGE_NAME}.sif pip freeze > ${JOB_WORKDIR}/autolauncher-output/pip_freeze.txt 2>&1"
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec /data/${BUILD_IMAGE_NAME}.sif pip freeze > ${JOB_WORKDIR}/autolauncher-output/pip_freeze.txt 2>&1"
 
     # Step 7: Verify the image was created and log the contents of /data again
     - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/ > ${JOB_WORKDIR}/autolauncher-output/ls_output.log 2>&1
