@@ -1,5 +1,4 @@
 variables:
-    LAUNCH_TARGET_FOLDER: /mnt/diskS/autolauncher
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     LAUNCH_CONFIG_PATH: configs/config.json
     EXEC_HOSTS_FILE: some_file
@@ -46,6 +45,7 @@ build_image_mn5:
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
     - time apk add bash shadow openssh rsync
+    - export LAUNCH_TARGET_FOLDER=/mnt/diskS/autolauncher # Override the one defined in .gitlab-ci.yml 
     - export LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME##*/} # This removes the username and slash from the name to avoid conflicts when creating the file
   script:
     # Step 1: Extract the .def file name from the commit title
