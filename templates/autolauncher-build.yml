@@ -46,6 +46,7 @@ build_image_mn5:
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
     - time apk add bash shadow openssh rsync
+    - export LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME##*/} # This removes the username and slash from the name to avoid conflicts when creating the file
   script:
     # Step 1: Extract the .def file name from the commit title
     - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
