@@ -47,6 +47,7 @@ build_image_mn5:
     - time apk add bash shadow openssh rsync
     - export LAUNCH_TARGET_FOLDER=/mnt/diskS/autolauncher # Override the one defined in .gitlab-ci.yml 
     - export LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME##*/} # This removes the username and slash from the name to avoid conflicts when creating the file
+    - export PROJECT_NAME=${CI_PROJECT_PATH##*/} # This removes the username and slash from the name to avoid conflicts when creating the file
   script:
     # Step 1: Extract the .def file name from the commit title
     - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
@@ -54,7 +55,7 @@ build_image_mn5:
     - echo "The .def file is $DEF_FILE"
 
     # Step 2: Connect to OpenStack copy the ssh key from secrets, decode key and do the ssh connection
-    - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${CI_PROJECT_PATH}
+    - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${PROJECT_NAME}
     - mkdir -p ~/.ssh/
     - chmod 0700 ~/.ssh
     - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/ssh-key
@@ -67,7 +68,7 @@ build_image_mn5:
     - export OPENSTACK_USER="${OPENSTACK_USER//_/}"
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo apt-get clean"
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p ${JOB_WORKDIR}/autolauncher-output && sudo chmod 644 ${JOB_WORKDIR}"
-    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${JOB_WORKDIR}
+    - scp -v -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${JOB_WORKDIR}
 
     # Step 4: Define the final image name based on .def file or predefined value
     - export BUILD_IMAGE_NAME="${LAUNCH_IMAGE_NAME}"
@@ -75,7 +76,7 @@ build_image_mn5:
 
     # Step 5: Build the Singularity image from the .def file and save output logs
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p /mnt/diskS/.cache /mnt/diskS/.temp"
-    - ssh -vvv -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo -E SINGULARITY_TMPDIR='/mnt/diskS/.temp' SINGULARITY_CACHEDIR='/mnt/diskS/.cache' singularity build ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ${JOB_WORKDIR}/${DEF_FILE} > ${JOB_WORKDIR}/autolauncher-output/build_output.log 2> ${JOB_WORKDIR}/autolauncher-output/build_error.log"
+    - ssh -v -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo -E SINGULARITY_TMPDIR='/mnt/diskS/.temp' SINGULARITY_CACHEDIR='/mnt/diskS/.cache' singularity build ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ${JOB_WORKDIR}/${DEF_FILE} > ${JOB_WORKDIR}/autolauncher-output/build_output.log 2> ${JOB_WORKDIR}/autolauncher-output/build_error.log"
 
     # Step 6: Extract pip freeze from the Singularity image environment
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "singularity exec /data/${BUILD_IMAGE_NAME}.sif pip freeze > ${JOB_WORKDIR}/autolauncher-output/pip_freeze.txt 2>&1"
