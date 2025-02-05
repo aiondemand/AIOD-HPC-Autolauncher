@@ -80,7 +80,7 @@ build_image_mn5:
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo -E SINGULARITY_TMPDIR='/mnt/diskS/.temp' SINGULARITY_CACHEDIR='/mnt/diskS/.cache' singularity build ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ${JOB_WORKDIR}/${DEF_FILE} > ${JOB_WORKDIR}/autolauncher-output/build_output.log 2> ${JOB_WORKDIR}/autolauncher-output/build_error.log"
 
     # Step 6: Extract pip freeze from the Singularity image environment
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec /data/${BUILD_IMAGE_NAME}.sif pip freeze > ${JOB_WORKDIR}/autolauncher-output/pip_freeze.txt 2>&1"
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif pip freeze > ${JOB_WORKDIR}/autolauncher-output/pip_freeze.txt 2>&1"
 
     # Step 7: Verify the image was created and log the contents of /data again
     - docker exec aux_runner_${CI_COMMIT_SHORT_SHA} ls -la /data/ > ${JOB_WORKDIR}/autolauncher-output/ls_output.log 2>&1
