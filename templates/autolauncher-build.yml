@@ -85,7 +85,7 @@ build_image_mn5:
         2>&1 | tee ${JOB_WORKDIR}/autolauncher-output/build.log"
 
     # Clean-up to reduce image size
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif apt-get clean && rm -rf /var/lib/apt/lists/*"
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif bash -c 'apt-get clean && rm -rf /var/lib/apt/lists/*'"
 
     # Step 6: Extract pip freeze from the Singularity image environment
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif pip3 freeze > ${JOB_WORKDIR}/autolauncher-output/pip_freeze.txt 2>&1"
