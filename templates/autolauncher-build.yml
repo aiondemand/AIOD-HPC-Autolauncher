@@ -77,15 +77,11 @@ build_image_mn5:
 
     # Step 5: Build the Singularity image from the .def file and save output logs
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p /mnt/diskS/.cache /mnt/diskS/.temp"
-    # - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo -E SINGULARITY_TMPDIR='/mnt/diskS/.temp' SINGULARITY_CACHEDIR='/mnt/diskS/.cache' singularity build ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ${JOB_WORKDIR}/${DEF_FILE} > ${JOB_WORKDIR}/autolauncher-output/build_output.log 2> ${JOB_WORKDIR}/autolauncher-output/build_error.log"
     - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
         sudo -E SINGULARITY_TMPDIR='/mnt/diskS/.temp' SINGULARITY_CACHEDIR='/mnt/diskS/.cache' \
         singularity build ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ${JOB_WORKDIR}/${DEF_FILE} \
         2>&1 | tee ${JOB_WORKDIR}/autolauncher-output/build.log"
-
-    # Clean-up to reduce image size
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif bash -c 'apt-get clean && rm -rf /var/lib/apt/lists/*'"
 
     # Step 6: Extract pip freeze from the Singularity image environment
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif pip3 freeze > ${JOB_WORKDIR}/autolauncher-output/pip_freeze.txt 2>&1"
