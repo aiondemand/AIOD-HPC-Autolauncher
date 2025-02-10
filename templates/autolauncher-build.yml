@@ -1,6 +1,7 @@
 variables:
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
     LAUNCH_CONFIG_PATH: configs/config.json
+    OUTPUT_FOLDER: /gpfs/projects/bsc70/hpai/storage/data/images
     EXEC_HOSTS_FILE: some_file
     SINGULARITY_IMAGE: quay.io/singularity/singularity:v3.11.5-slim 
     LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME} # qi
@@ -53,6 +54,7 @@ build_image_mn5:
     - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
     - export DEF_FILE=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
     - echo "The .def file is $DEF_FILE"
+    - echo "$CI_PROJECT_PATH"
 
     # Step 2: Connect to OpenStack copy the ssh key from secrets, decode key and do the ssh connection
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${PROJECT_NAME}
