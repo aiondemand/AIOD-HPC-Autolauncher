@@ -48,7 +48,8 @@ build_image_mn5:
     - time apk add bash shadow openssh rsync
     - export LAUNCH_TARGET_FOLDER=/mnt/diskS/autolauncher # Override the one defined in .gitlab-ci.yml 
     - export LAUNCH_IMAGE_NAME=$(echo ${LAUNCH_IMAGE_NAME##*/} | tr ':' '_') # This removes the username and slash from the name to avoid conflicts when creating the file
-    - export PROJECT_NAME=${CI_PROJECT_PATH##*/} # This removes the username and slash from the name to avoid conflicts when creating the file
+    - export USER=${CI_PROJECT_PATH%/*}
+    - export PROJECT_NAME=${CI_PROJECT_PATH##*/}
   script:
     # Step 1: Extract the .def file name from the commit title
     - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
@@ -57,7 +58,7 @@ build_image_mn5:
     - echo "$CI_PROJECT_PATH"
 
     # Step 2: Connect to OpenStack copy the ssh key from secrets, decode key and do the ssh connection
-    - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${PROJECT_NAME}
+    - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${LAUNCH_IMAGE_NAME}
     - mkdir -p ~/.ssh/
     - chmod 0700 ~/.ssh
     - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/ssh-key
@@ -91,6 +92,10 @@ build_image_mn5:
     # Step 7: copy artifacts from remote
     - mkdir -p autolauncher-output
     - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${JOB_WORKDIR}/autolauncher-output/* autolauncher-output/
+
+    # Step 8: Store it in output folder with username and project as subfolders
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "mkdir -p ${OUTPUT_FOLDER}/${USER}/{PROJECT_NAME}/"
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "mv ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ${OUTPUT_FOLDER}/${USER}/"
   artifacts:
     paths:
       - autolauncher-output/
