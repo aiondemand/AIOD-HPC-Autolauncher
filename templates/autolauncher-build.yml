@@ -20,8 +20,6 @@ build:
     - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ci.atalaya.at
     - docker build -t ci.atalaya.at/${LAUNCH_IMAGE_NAME} -f containers/Dockerfile-${LAUNCH_TARGET}${DOCKERFILE_TAG} .
     - docker push ci.atalaya.at/${LAUNCH_IMAGE_NAME}
-    - export OPENSTACK_USER="ubuntu"
-    - export OPENSTACK_HOST="212.128.226.38"
   rules:
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_AMD.*$/
       variables:
@@ -48,6 +46,8 @@ build_image_mn5:
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
     - time apk add bash shadow openssh rsync
+    - export OPENSTACK_USER="ubuntu"
+    - export OPENSTACK_HOST="212.128.226.38"
     - export LAUNCH_TARGET_FOLDER=/mnt/diskS/autolauncher # Override the one defined in .gitlab-ci.yml 
     - export LAUNCH_IMAGE_NAME=$(echo ${LAUNCH_IMAGE_NAME##*/} | tr ':' '_') # This removes the username and slash from the name to avoid conflicts when creating the file
     - export USER=${CI_PROJECT_PATH%/*}
