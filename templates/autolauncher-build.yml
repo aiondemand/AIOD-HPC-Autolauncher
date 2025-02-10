@@ -20,6 +20,8 @@ build:
     - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ci.atalaya.at
     - docker build -t ci.atalaya.at/${LAUNCH_IMAGE_NAME} -f containers/Dockerfile-${LAUNCH_TARGET}${DOCKERFILE_TAG} .
     - docker push ci.atalaya.at/${LAUNCH_IMAGE_NAME}
+    - export OPENSTACK_USER="ubuntu"
+    - export OPENSTACK_HOST="212.128.226.38"
   rules:
     - if: $CI_COMMIT_TITLE =~ /^LAUNCH_AMD.*$/
       variables:
