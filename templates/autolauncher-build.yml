@@ -101,7 +101,7 @@ build_image_mn5:
   artifacts:
     paths:
       - autolauncher-output/
-    expire_in: 1 week
+    expire_in: never # permanent
   rules:
     - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5.*$/
     - when: never
