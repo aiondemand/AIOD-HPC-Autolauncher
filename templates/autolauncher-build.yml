@@ -96,7 +96,7 @@ build_image_mn5:
     - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${JOB_WORKDIR}/autolauncher-output/* autolauncher-output/
 
     # Step 8: Store it in output folder with username and project as subfolders
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "mkdir -p ${OUTPUT_FOLDER}/${USER}/{PROJECT_NAME}/"
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "mkdir -p ${OUTPUT_FOLDER}/${USER}/"
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "mv ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ${OUTPUT_FOLDER}/${USER}/"
   artifacts:
     paths:
