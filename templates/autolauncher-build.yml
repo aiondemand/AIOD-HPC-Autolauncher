@@ -47,7 +47,7 @@ build_image_mn5:
     - apk add --update curl && rm -rf /var/cache/apk/*
     - time apk add bash shadow openssh rsync
     - export OPENSTACK_USER="ubuntu"
-    - echo "$OPENSTACK2_KEY"
+    - echo "$OPENSTACK_KEY"
     - export OPENSTACK_HOST="212.128.226.143"
     # - export OPENSTACK_HOST="212.128.226.38"
     - export LAUNCH_TARGET_FOLDER=/mnt/diskS/autolauncher # Override the one defined in .gitlab-ci.yml 
@@ -65,7 +65,6 @@ build_image_mn5:
     - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${LAUNCH_IMAGE_NAME}
     - mkdir -p ~/.ssh/
     - chmod 0700 ~/.ssh
-    # - echo ${OPENSTACK2_KEY} | base64 -dw0 > ~/.ssh/ssh-key
     - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/ssh-key
     - chmod 0600 ~/.ssh/ssh-key
     - ssh-keygen -f ~/.ssh/ssh-key -p
