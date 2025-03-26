@@ -67,7 +67,7 @@ build_image_mn5:
     - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/ssh-key
     - cat ~/.ssh/ssh-key
     - chmod 0600 ~/.ssh/ssh-key
-    - ssh-keygen -f ~/.ssh/ssh-key -p
+    # - ssh-keygen -f ~/.ssh/ssh-key -p
     - echo "${LAUNCH_TARGET_FOLDER}"
     - echo "Work directory will be ${JOB_WORKDIR}"
     
