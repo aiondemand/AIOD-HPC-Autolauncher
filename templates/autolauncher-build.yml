@@ -5,7 +5,7 @@ variables:
     EXEC_HOSTS_FILE: some_file
     SINGULARITY_IMAGE: quay.io/singularity/singularity:v3.11.5-slim 
     LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME} # qi
-    TAGS: pepino # mininostrum, estufa or pepino
+    TAGS: estufa # mininostrum, estufa or pepino
 
 build:
   image: ci.atalaya.at/containers/docker:stable
