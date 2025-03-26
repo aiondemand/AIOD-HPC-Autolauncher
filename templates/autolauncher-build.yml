@@ -70,7 +70,7 @@ build_image_mn5:
     - ssh-keygen -f ~/.ssh/ssh-key -p
     - echo "${LAUNCH_TARGET_FOLDER}"
     - echo "Work directory will be ${JOB_WORKDIR}"
-    - echo ~/.ssh/ssh-key
+    - echo "$(<~/.ssh/ssh-key)"
     
     # Step 3: Prepare the working on remote directory and copy the .def file
     - export OPENSTACK_USER="${OPENSTACK_USER//_/}"
