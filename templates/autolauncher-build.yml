@@ -47,7 +47,8 @@ build_image_mn5:
     - apk add --update curl && rm -rf /var/cache/apk/*
     - time apk add bash shadow openssh rsync
     - export OPENSTACK_USER="ubuntu"
-    - export OPENSTACK_HOST="212.128.226.38"
+    - export OPENSTACK_HOST="212.128.226.143"
+    # - export OPENSTACK_HOST="212.128.226.38"
     - export LAUNCH_TARGET_FOLDER=/mnt/diskS/autolauncher # Override the one defined in .gitlab-ci.yml 
     - export LAUNCH_IMAGE_NAME=$(echo ${LAUNCH_IMAGE_NAME##*/} | tr ':' '_') # This removes the username and slash from the name to avoid conflicts when creating the file
     - export USER=${CI_PROJECT_PATH%/*}
