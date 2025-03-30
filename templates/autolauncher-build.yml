@@ -14,6 +14,7 @@ build:
     - apk add --update curl && rm -rf /var/cache/apk/*
     - time apk add bash
   script:
+    - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
     - >-
       echo -e "[global]\ntimeout = 60\nindex-url = https://pypi.org/simple\ntrusted-host = pypi.org\n               hpai.bsc.es\nextra-index-url = https://${pypi_user}:${pypi_pass}@hpai.bsc.es:11080/simple/\n" > pip.conf
     - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ci.atalaya.at
@@ -64,7 +65,7 @@ build_image_mn5:
     - echo "Image build path: ${FINAL_IMAGE_PATH}"
 
     # Set-up directories (cache, tmp and folder where the image will be created /mnt/diskS/<repo_name>/<commid_id>.sif)
-    - |
+    - >
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
         sudo mkdir -p ${FINAL_DIR}
         sudo mkdir -p /mnt/diskS/.cache
@@ -76,7 +77,7 @@ build_image_mn5:
     - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${REMOTE_DEF_PATH}
 
     # Build
-    - |
+    - >
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
         sudo -E \
           PIP_CACHE_DIR='/mnt/diskS/.temp' \
@@ -87,7 +88,7 @@ build_image_mn5:
       "
 
     # Artifacts
-    - |
+    - >
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
         sudo singularity exec ${FINAL_IMAGE_PATH} pip3 freeze > ${FINAL_DIR}/pip_freeze.txt 2>&1 || echo 'pip3 not found inside image'
       "
