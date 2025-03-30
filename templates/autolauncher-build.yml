@@ -81,7 +81,7 @@ build_image_mn5:
     - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/pip_freeze.txt /tmp/autolauncher-output/
   artifacts:
     paths:
-      - autolauncher-output/
+        - /tmp/autolauncher-output/
     expire_in: never # permanent
   rules:
     - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5.*$/
