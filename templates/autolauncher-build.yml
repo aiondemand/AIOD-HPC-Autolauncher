@@ -76,12 +76,12 @@ build_image_mn5:
 
     # Artifacts
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec ${FINAL_IMAGE_PATH} pip3 freeze > ${FINAL_DIR}/pip_freeze.txt 2>&1 || echo 'pip3 not found inside image'"
-    - mkdir -p /tmp/autolauncher-output/
-    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/build.log /tmp/autolauncher-output/
-    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/pip_freeze.txt /tmp/autolauncher-output/
+    - mkdir -p autolauncher-output/
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/build.log autolauncher-output/
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/pip_freeze.txt autolauncher-output/
   artifacts:
     paths:
-        - /tmp/autolauncher-output/
+        - autolauncher-output/
     expire_in: never # permanent
   rules:
     - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5.*$/
