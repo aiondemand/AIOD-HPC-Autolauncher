@@ -14,7 +14,6 @@ build:
     - apk add --update curl && rm -rf /var/cache/apk/*
     - time apk add bash
   script:
-    - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
     - >-
       echo -e "[global]\ntimeout = 60\nindex-url = https://pypi.org/simple\ntrusted-host = pypi.org\n               hpai.bsc.es\nextra-index-url = https://${pypi_user}:${pypi_pass}@hpai.bsc.es:11080/simple/\n" > pip.conf
     - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ci.atalaya.at
@@ -44,63 +43,57 @@ build_image_mn5:
   variables:
     DOCKER_DRIVER: overlay2
   before_script:
-    - apk add --update curl && rm -rf /var/cache/apk/*
-    - time apk add bash shadow openssh rsync
+    - apk add --update curl bash openssh rsync shadow && rm -rf /var/cache/apk/*
     - export OPENSTACK_USER="ubuntu"
-    # - export OPENSTACK_HOST="212.128.226.143"
     - export OPENSTACK_HOST="212.128.226.38"
-    - export LAUNCH_TARGET_FOLDER=/mnt/diskS/autolauncher # Override the one defined in .gitlab-ci.yml 
-    - export LAUNCH_IMAGE_NAME=$(echo ${LAUNCH_IMAGE_NAME##*/} | tr ':' '_') # This removes the username and slash from the name to avoid conflicts when creating the file
-    - export USER=${CI_PROJECT_PATH%/*}
-    - export PROJECT_NAME=${CI_PROJECT_PATH##*/}
   script:
-    # Step 1: Extract the .def file name from the commit title
-    - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
-    - export DEF_FILE=$(echo ${CI_COMMIT_TITLE} | sed -e 's/.*<\([^]]*\)>.*/\1/g')
+    # Extract the .def file name from the commit title
+    - export DEF_FILE=$(echo "${CI_COMMIT_TITLE}" | sed -e 's/.*<\([^]]*\)>.*/\1/g')
     - echo "The .def file is $DEF_FILE"
-    - echo "$CI_PROJECT_PATH"
 
-    # Step 2: Connect to OpenStack copy the ssh key from secrets, decode key and do the ssh connection
-    - JOB_WORKDIR=${LAUNCH_TARGET_FOLDER}/${LAUNCH_IMAGE_NAME}
-    - mkdir -p ~/.ssh/
-    - chmod 0700 ~/.ssh
+    # Connect to OpenStack copy the ssh key from secrets, decode key and do the ssh connection
+    - mkdir -p ~/.ssh/ && chmod 0700 ~/.ssh
     - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/ssh-key
     - chmod 0600 ~/.ssh/ssh-key
-    - ssh-keygen -f ~/.ssh/ssh-key -p
-    - echo "${LAUNCH_TARGET_FOLDER}"
-    - echo "Work directory will be ${JOB_WORKDIR}"
     
-    # Step 3: Prepare the working on remote directory and copy the .def file
-    - export OPENSTACK_USER="${OPENSTACK_USER//_/}"
-    - echo "${OPENSTACK_USER}"
-    - echo "${OPENSTACK_HOST}"
-    - ssh -vvv -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "echo 'TEST'"
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p ${JOB_WORKDIR}/autolauncher-output && sudo chmod 777 ${JOB_WORKDIR}/autolauncher-output"
-    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:/tmp/
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mv /tmp/$(basename ${DEF_FILE}) ${JOB_WORKDIR}"
+    # Set-up names
+    - export REPO_NAME="${CI_PROJECT_PATH##*/}"
+    - export REMOTE_DEF_PATH="/tmp/$(basename ${DEF_FILE})"
+    - export FINAL_DIR="/mnt/diskS/autolauncher/${REPO_NAME}"
+    - export FINAL_IMAGE_PATH="${FINAL_DIR}/${CI_COMMIT_SHA}.sif"
+    - echo "Image build path: ${FINAL_IMAGE_PATH}"
 
-    # Step 4: Define the final image name based on .def file or predefined value
-    - export BUILD_IMAGE_NAME="${LAUNCH_IMAGE_NAME}"
-    - echo "The Singularity image will be named $BUILD_IMAGE_NAME"
-
-    # Step 5: Build the Singularity image from the .def file and save output logs
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p /mnt/diskS/.cache /mnt/diskS/.temp"
+    # Set-up directories (cache, tmp and folder where the image will be created /mnt/diskS/<repo_name>/<commid_id>.sif)
     - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
-        sudo -E PIP_CACHE_DIR='/mnt/diskS/.temp' SINGULARITY_TMPDIR='/mnt/diskS/.temp' SINGULARITY_CACHEDIR='/mnt/diskS/.cache' \
-        singularity build ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ${JOB_WORKDIR}/${DEF_FILE} \
-        2>&1 | tee ${JOB_WORKDIR}/autolauncher-output/build.log"
+        sudo mkdir -p ${FINAL_DIR}
+        sudo mkdir -p /mnt/diskS/.cache
+        sudo mkdir -p /mnt/diskS/.temp
+        sudo chmod 777 ${FINAL_DIR}
+      "
 
-    # Step 6: Extract pip freeze from the Singularity image environment
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif pip3 freeze > ${JOB_WORKDIR}/autolauncher-output/pip_freeze.txt 2>&1"
+    # Send .def file
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${REMOTE_DEF_PATH}
 
-    # Step 7: copy artifacts from remote
-    - mkdir -p autolauncher-output
-    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${JOB_WORKDIR}/autolauncher-output/* autolauncher-output/
+    # Build
+    - |
+      ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
+        sudo -E \
+          PIP_CACHE_DIR='/mnt/diskS/.temp' \
+          SINGULARITY_TMPDIR='/mnt/diskS/.temp' \
+          SINGULARITY_CACHEDIR='/mnt/diskS/.cache' \
+        singularity build ${FINAL_IMAGE_PATH} ${REMOTE_DEF_PATH} \
+          2>&1 | tee ${FINAL_DIR}/build.log
+      "
 
-    # Step 8: Store it in output folder with username and project as subfolders
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "mkdir -p ${OUTPUT_FOLDER}/${USER}/"
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "mv ${JOB_WORKDIR}/${BUILD_IMAGE_NAME}.sif ${OUTPUT_FOLDER}/${USER}/"
+    # Artifacts
+    - |
+      ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
+        sudo singularity exec ${FINAL_IMAGE_PATH} pip3 freeze > ${FINAL_DIR}/pip_freeze.txt 2>&1 || echo 'pip3 not found inside image'
+      "
+    - mkdir -p /tmp/autolauncher-output/
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/build.log /tmp/autolauncher-output/
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/pip_freeze.txt /tmp/autolauncher-output/
   artifacts:
     paths:
       - autolauncher-output/
