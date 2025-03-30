@@ -65,33 +65,16 @@ build_image_mn5:
     - echo "Image build path: ${FINAL_IMAGE_PATH}"
 
     # Set-up directories (cache, tmp and folder where the image will be created /mnt/diskS/<repo_name>/<commid_id>.sif)
-    - >
-      ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
-        sudo mkdir -p ${FINAL_DIR}
-        sudo mkdir -p /mnt/diskS/.cache
-        sudo mkdir -p /mnt/diskS/.temp
-        sudo chmod 777 ${FINAL_DIR}
-      "
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p ${FINAL_DIR} /mnt/diskS/.cache /mnt/diskS/.temp && sudo chmod 777 ${FINAL_DIR}"
 
     # Send .def file
     - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${REMOTE_DEF_PATH}
 
     # Build
-    - >
-      ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
-        sudo -E \
-          PIP_CACHE_DIR='/mnt/diskS/.temp' \
-          SINGULARITY_TMPDIR='/mnt/diskS/.temp' \
-          SINGULARITY_CACHEDIR='/mnt/diskS/.cache' \
-        singularity build ${FINAL_IMAGE_PATH} ${REMOTE_DEF_PATH} \
-          2>&1 | tee ${FINAL_DIR}/build.log
-      "
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo -E PIP_CACHE_DIR='/mnt/diskS/.temp' SINGULARITY_TMPDIR='/mnt/diskS/.temp' SINGULARITY_CACHEDIR='/mnt/diskS/.cache' singularity build ${FINAL_IMAGE_PATH} ${REMOTE_DEF_PATH} 2>&1 | tee ${FINAL_DIR}/build.log"
 
     # Artifacts
-    - >
-      ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
-        sudo singularity exec ${FINAL_IMAGE_PATH} pip3 freeze > ${FINAL_DIR}/pip_freeze.txt 2>&1 || echo 'pip3 not found inside image'
-      "
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec ${FINAL_IMAGE_PATH} pip3 freeze > ${FINAL_DIR}/pip_freeze.txt 2>&1 || echo 'pip3 not found inside image'"
     - mkdir -p /tmp/autolauncher-output/
     - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/build.log /tmp/autolauncher-output/
     - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/pip_freeze.txt /tmp/autolauncher-output/
