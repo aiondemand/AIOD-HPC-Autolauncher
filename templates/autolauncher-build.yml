@@ -66,7 +66,7 @@ build_image_mn5:
     - echo "${FINAL_IMAGE_PATH}"
 
     # Set-up directories (cache, tmp and folder where the image will be created /mnt/diskS/<repo_name>/<commid_id>.sif)
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p ${FINAL_DIR} /mnt/diskS/.cache /mnt/diskS/.temp && sudo chmod 777 ${FINAL_DIR} && sudo mkdir /tmp/autolauncher-output/"
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p ${FINAL_DIR} /mnt/diskS/.cache /mnt/diskS/.temp && sudo chmod 777 ${FINAL_DIR}"
 
     # Send .def file
     - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${REMOTE_DEF_PATH}
