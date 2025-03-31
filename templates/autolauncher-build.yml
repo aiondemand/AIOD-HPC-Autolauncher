@@ -87,6 +87,10 @@ build_image_mn5:
     - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/build.log autolauncher-output/
     - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/pip_freeze.txt autolauncher-output/
 
+    - echo "${FINAL_IMAGE_PATH}"
+    - echo "${FINAL_DIR}/build.log"
+    - echo "${FINAL_DIR}/pip_freeze.txt"
+
     # Send image to GPFS
     - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
