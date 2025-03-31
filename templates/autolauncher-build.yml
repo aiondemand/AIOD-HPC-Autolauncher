@@ -98,22 +98,22 @@ build_image_mn5:
         sudo cp ${FINAL_IMAGE_PATH} ${REMOTE_OUTPUT_PATH}/ &&
         sudo cp ${FINAL_DIR}/build.log ${REMOTE_OUTPUT_PATH}/ &&
         sudo cp ${FINAL_DIR}/pip_freeze.txt ${REMOTE_OUTPUT_PATH}/ &&
-        sudo cp ${REMOTE_DEF_PATH} ${REMOTE_OUTPUT_PATH}/
+        sudo cp ${REMOTE_DEF_PATH} ${REMOTE_OUTPUT_PATH}/recipe.def
       "
     # TODO: If success remove everything from OpenStack VM (we will do this later)
     - |
-      echo "┌-----------------------------------------------------------------------------------------------------------------"
+      echo "┌"
       echo "|"
       echo "|      Singularity image saved to GPFS: "
-      echo "|      ${REMOTE_OUTPUT_PATH}/${SHORT_SHA}.sif "
+      echo "|      ${REMOTE_OUTPUT_PATH}/{SHORT_SHA}.sif "
       echo "|"
       echo "|      Python dependencies stored in: "
       echo "|      ${REMOTE_OUTPUT_PATH}/pip_freeze.txt "
       echo "|"
       echo "|      Definition file used for this build stored in: "
-      echo "|      ${REMOTE_OUTPUT_PATH}/ "
+      echo "|      ${REMOTE_OUTPUT_PATH}/recipe.def"
       echo "|"
-      echo "└-----------------------------------------------------------------------------------------------------------------"
+      echo "└"
 
   artifacts:
     paths:
