@@ -90,7 +90,7 @@ build_image_mn5:
     # Send image to GPFS
     - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
-        if [ -f ${FINAL_IMAGE_PATH}/test.def ]; then
+        if [ -f ${FINAL_IMAGE_PATH} ]; then
           sudo mkdir -p ${REMOTE_OUTPUT_PATH} &&
           sudo cp ${FINAL_IMAGE_PATH} ${REMOTE_OUTPUT_PATH}/ &&
           sudo cp ${FINAL_DIR}/build.log ${REMOTE_OUTPUT_PATH}/ &&
@@ -98,7 +98,8 @@ build_image_mn5:
           sudo cp ${REMOTE_DEF_PATH} ${REMOTE_OUTPUT_PATH}/recipe.def &&
           sudo rm -rf ${FINAL_DIR}
         else
-          echo '[ERROR]: Singularity image was not created.' >&2
+          echo '[ERROR]: Singularity image was not built. It does not exists in the current filesystem: $FINAL_IMAGE_PATH' >&2
+          sudo rm -rf ${FINAL_DIR}
           exit 1
         fi
       "
