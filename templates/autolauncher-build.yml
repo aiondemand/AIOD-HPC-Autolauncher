@@ -104,18 +104,18 @@ build_image_mn5:
       "
 
     - |
-      echo "┌"
-      echo "|"
-      echo "|      Singularity image saved to GPFS: "
-      echo "|      ${REMOTE_OUTPUT_PATH}/${SHORT_SHA}.sif "
-      echo "|"
-      echo "|      Python dependencies stored in: "
-      echo "|      ${REMOTE_OUTPUT_PATH}/pip_freeze.txt "
-      echo "|"
-      echo "|      Definition file used for this build stored in: "
-      echo "|      ${REMOTE_OUTPUT_PATH}/recipe.def"
-      echo "|"
-      echo "└"
+      echo " "
+      echo " "
+      echo "       Singularity image saved to GPFS: "
+      echo "       ${REMOTE_OUTPUT_PATH}/${SHORT_SHA}.sif "
+      echo " "
+      echo "       Python dependencies stored in: "
+      echo "       ${REMOTE_OUTPUT_PATH}/pip_freeze.txt "
+      echo " "
+      echo "       Definition file used for this build stored in: "
+      echo "       ${REMOTE_OUTPUT_PATH}/recipe.def"
+      echo " "
+      echo " "
 
   artifacts:
     paths:
