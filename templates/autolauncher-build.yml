@@ -82,7 +82,7 @@ build_image_mn5:
       "
 
     # Artifacts
-    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec ${FINAL_IMAGE_PATH} pip3 freeze > ${FINAL_DIR}/pip_freeze.txt 2>&1 || echo '[ERROR] pip3 executable file not found in $PATH'"
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec ${FINAL_IMAGE_PATH} pip3 freeze > ${FINAL_DIR}/pip_freeze.txt 2>&1 || echo '[ERROR]   pip3 executable file not found in PATH'"
     - mkdir -p autolauncher-output/
     - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/build.log autolauncher-output/
     - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/pip_freeze.txt autolauncher-output/
@@ -98,7 +98,7 @@ build_image_mn5:
           sudo cp ${REMOTE_DEF_PATH} ${REMOTE_OUTPUT_PATH}/recipe.def &&
           sudo rm -rf ${FINAL_DIR}
         else
-          echo '[ERROR]: Singularity image was not built. It does not exists in the current filesystem: $FINAL_IMAGE_PATH' >&2
+          echo '[ERROR]:   Singularity image was not built. It does not exists in the current filesystem: $FINAL_IMAGE_PATH' >&2
           sudo rm -rf ${FINAL_DIR}
           exit 1
         fi
