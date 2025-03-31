@@ -102,16 +102,18 @@ build_image_mn5:
       "
     # TODO: If success remove everything from OpenStack VM (we will do this later)
     - |
-      echo ""
-      echo "      Singularity image saved to GPFS: "
-      echo "      ${REMOTE_OUTPUT_PATH}/${SHORT_SHA}.sif "
-      echo ""
-      echo "      Python dependencies stored in: "
-      echo "      ${REMOTE_OUTPUT_PATH}/pip_freeze.txt "
-      echo ""
-      echo "      Definition file used for this build stored in: "
-      echo "      ${REMOTE_OUTPUT_PATH}/ "
-      echo ""
+      echo "┌-----------------------------------------------------------------------------------------------------------------"
+      echo "|"
+      echo "|      Singularity image saved to GPFS: "
+      echo "|      ${REMOTE_OUTPUT_PATH}/${SHORT_SHA}.sif "
+      echo "|"
+      echo "|      Python dependencies stored in: "
+      echo "|      ${REMOTE_OUTPUT_PATH}/pip_freeze.txt "
+      echo "|"
+      echo "|      Definition file used for this build stored in: "
+      echo "|      ${REMOTE_OUTPUT_PATH}/ "
+      echo "|"
+      echo "└-----------------------------------------------------------------------------------------------------------------"
 
   artifacts:
     paths:
