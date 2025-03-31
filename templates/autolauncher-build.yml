@@ -92,8 +92,8 @@ build_image_mn5:
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
         sudo mkdir -p ${REMOTE_OUTPUT_PATH} &&
         sudo mv ${FINAL_IMAGE_PATH} ${REMOTE_OUTPUT_PATH}/ &&
-        sudo mv ${BUILD_DIR}/build.log ${REMOTE_OUTPUT_PATH}/ &&
-        sudo mv ${BUILD_DIR}/pip_freeze.txt ${REMOTE_OUTPUT_PATH}/
+        sudo mv ${FINAL_DIR}/build.log ${REMOTE_OUTPUT_PATH}/ &&
+        sudo mv ${FINAL_DIR}/pip_freeze.txt ${REMOTE_OUTPUT_PATH}/
       "
   artifacts:
     paths:
