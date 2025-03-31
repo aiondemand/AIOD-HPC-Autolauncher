@@ -63,8 +63,8 @@ build_image_mn5:
     - export SHORT_SHA="${CI_COMMIT_SHORT_SHA}"
     - export REPO_NAME="${CI_PROJECT_PATH##*/}"
     - export REMOTE_DEF_PATH="/tmp/$(basename ${DEF_FILE})"
-    - export FINAL_DIR="/mnt/diskS/autolauncher/${REPO_NAME}"
-    - export FINAL_IMAGE_PATH="${FINAL_DIR}/${CI_COMMIT_SHA}.sif"
+    - export FINAL_DIR="/mnt/diskS/autolauncher/${USERNAME}/${REPO_NAME}"
+    - export FINAL_IMAGE_PATH="${FINAL_DIR}/${SHORT_SHA}.sif"
     - export REMOTE_OUTPUT_PATH="${OUTPUT_FOLDER}/${USERNAME}/${REPO_NAME}/${SHORT_SHA}"
     - echo "Image will be saved to $REMOTE_OUTPUT_PATH"
 
@@ -91,10 +91,25 @@ build_image_mn5:
     - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
         sudo mkdir -p ${REMOTE_OUTPUT_PATH} &&
-        sudo mv ${FINAL_IMAGE_PATH} ${REMOTE_OUTPUT_PATH}/ &&
-        sudo mv ${FINAL_DIR}/build.log ${REMOTE_OUTPUT_PATH}/ &&
-        sudo mv ${FINAL_DIR}/pip_freeze.txt ${REMOTE_OUTPUT_PATH}/
+        sudo cp ${FINAL_IMAGE_PATH} ${REMOTE_OUTPUT_PATH}/ &&
+        sudo cp ${FINAL_DIR}/build.log ${REMOTE_OUTPUT_PATH}/ &&
+        sudo cp ${FINAL_DIR}/pip_freeze.txt ${REMOTE_OUTPUT_PATH}/
       "
+    # TODO: If success remove everything from OpenStack VM (we will do this later)
+    - |
+      echo ""
+      echo "╔══════════════════════════════════════════════════════════╗"
+      echo "║                                                          ║"
+      echo "║ 🎉  IMAGE BUILD SUCCESSFUL                              ║"
+      echo "║                                                          ║"
+      echo "║     Singularity image saved to:                         ║"
+      echo "║     ${REMOTE_OUTPUT_PATH}/${SHORT_SHA}.sif              "
+      echo "║                                                          ║"
+      echo "║     Python dependencies stored in:                      ║"
+      echo "║     ${REMOTE_OUTPUT_PATH}/pip_freeze.txt                "
+      echo "║                                                          ║"
+      echo "╚══════════════════════════════════════════════════════════╝"
+
   artifacts:
     paths:
         - autolauncher-output/
