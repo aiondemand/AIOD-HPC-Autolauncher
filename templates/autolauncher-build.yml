@@ -62,21 +62,23 @@ build_image_mn5:
     - export USERNAME="${CI_PROJECT_PATH%/*}"
     - export SHORT_SHA="${CI_COMMIT_SHORT_SHA}"
     - export REPO_NAME="${CI_PROJECT_PATH##*/}"
-    - export REMOTE_DEF_PATH="/tmp/$(basename ${DEF_FILE})"
-    - export FINAL_DIR="/mnt/diskS/autolauncher/${USERNAME}/${REPO_NAME}"
+    - export FINAL_DIR="/mnt/diskS/autolauncher/${USERNAME}/${REPO_NAME}/${SHORT_SHA}"
+    - export REMOTE_DEF_PATH="${DEF_FILE}"
     - export FINAL_IMAGE_PATH="${FINAL_DIR}/${SHORT_SHA}.sif"
     - export REMOTE_OUTPUT_PATH="${OUTPUT_FOLDER}/${USERNAME}/${REPO_NAME}/${SHORT_SHA}"
     - echo "Image will be saved to $REMOTE_OUTPUT_PATH"
 
+    # Clone the whole repo (we must do this to support requirements.txt)
+    - rsync -az --delete ./ -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key" ./ ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/
+    # - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${REMOTE_DEF_PATH}
+
     # Set-up directories (cache, tmp and folder where the image will be created /mnt/diskS/<repo_name>/<commid_id>.sif)
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p ${FINAL_DIR} /mnt/diskS/.cache /mnt/diskS/.temp && sudo chmod 777 ${FINAL_DIR}"
-
-    # Send .def file
-    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${REMOTE_DEF_PATH}
 
     # Build
     - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
+        cd ${FINAL_DIR} &&
         sudo -E PIP_CACHE_DIR='/mnt/diskS/.temp' SINGULARITY_TMPDIR='/mnt/diskS/.temp' SINGULARITY_CACHEDIR='/mnt/diskS/.cache' \
         singularity build ${FINAL_IMAGE_PATH} ${REMOTE_DEF_PATH} 2>&1 | tee ${FINAL_DIR}/build.log \
       "
