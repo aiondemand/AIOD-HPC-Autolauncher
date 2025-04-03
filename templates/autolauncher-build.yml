@@ -82,7 +82,7 @@ build_image_mn5:
     - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
         cd ${FINAL_DIR} &&
-        sudo -E PIP_CACHE_DIR='/mnt/diskS/.temp' SINGULARITY_TMPDIR='/mnt/diskS/.temp' SINGULARITY_CACHEDIR='/mnt/diskS/.cache' \
+        sudo -E TMPDIR=/dev/shm SINGULARITY_TMPDIR=/dev/shm SINGULARITY_CACHEDIR=/mnt/diskS/.cache PIP_CACHE_DIR=/mnt/diskS/.temp \
         singularity build ${FINAL_IMAGE_PATH} ${REMOTE_DEF_PATH} 2>&1 | tee ${FINAL_DIR}/build.log \
       "
 
