@@ -97,7 +97,7 @@ build_image_mn5:
           sudo cp ${FINAL_IMAGE_PATH} ${REMOTE_OUTPUT_PATH}/ &&
           sudo cp ${FINAL_DIR}/build.log ${REMOTE_OUTPUT_PATH}/ &&
           sudo cp ${FINAL_DIR}/pip_freeze.txt ${REMOTE_OUTPUT_PATH}/ &&
-          sudo cp ${REMOTE_DEF_PATH} ${REMOTE_OUTPUT_PATH}/recipe.def &&
+          sudo cp ${FINAL_DIR}/${DEF_FILE} ${REMOTE_OUTPUT_PATH}/recipe.def &&
           sudo rm -rf ${FINAL_DIR}
         else
           echo '[ERROR]:   Singularity image was not built. It does not exists in the current filesystem: $FINAL_IMAGE_PATH' >&2
