@@ -68,12 +68,11 @@ build_image_mn5:
     - export REMOTE_OUTPUT_PATH="${OUTPUT_FOLDER}/${USERNAME}/${REPO_NAME}/${SHORT_SHA}"
     - echo "Image will be saved to $REMOTE_OUTPUT_PATH"
 
-    # Clone the whole repo (we must do this to support requirements.txt)
-    - rsync -az --delete ./ -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key" ./ ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/
-    # - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${DEF_FILE} ${OPENSTACK_USER}@${OPENSTACK_HOST}:${REMOTE_DEF_PATH}
-
     # Set-up directories (cache, tmp and folder where the image will be created /mnt/diskS/<repo_name>/<commid_id>.sif)
     - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo mkdir -p ${FINAL_DIR} /mnt/diskS/.cache /mnt/diskS/.temp && sudo chmod 777 ${FINAL_DIR}"
+
+    # Clone the whole repo (we must do this to support requirements.txt)
+    - rsync -az --delete ./ -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key" ./ ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/
 
     # Build
     - |
