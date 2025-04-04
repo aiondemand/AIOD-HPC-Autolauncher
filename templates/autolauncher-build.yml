@@ -80,7 +80,7 @@ build_image_mn5:
 
     # Build
     echo "$FINAL_DIR"
-    echo "$DEF_FILE"
+    echo "$REMOTE_DEF_PATH"
     - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
         cd ${FINAL_DIR}/$(dirname ${DEF_FILE}) &&
