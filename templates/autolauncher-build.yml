@@ -79,13 +79,11 @@ build_image_mn5:
     - rsync -az --delete ./ -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key" ./ ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/
 
     # Build
-    echo "$FINAL_DIR"
-    echo "$REMOTE_DEF_PATH"
     - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
-        cd ${FINAL_DIR}/$(dirname ${DEF_FILE}) &&
+        cd ${FINAL_DIR}/\$(dirname ${DEF_FILE}) && \
         sudo -E SINGULARITY_CACHEDIR='/tmp/singularity-cache' \
-        singularity build ${FINAL_IMAGE_PATH} ${REMOTE_DEF_PATH} 2>&1 | tee ${FINAL_DIR}/build.log \
+        singularity build ${FINAL_IMAGE_PATH} \$(basename ${DEF_FILE}) 2>&1 | tee build.log \
       "
 
     # Artifacts
