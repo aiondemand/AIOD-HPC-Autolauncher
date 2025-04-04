@@ -79,7 +79,7 @@ build_image_mn5:
     - rsync -az --delete ./ -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key" ./ ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/
 
     # Build
-    echo "${FINAL_DIR}/$(dirname ${DEF_FILE})"
+    # echo "${FINAL_DIR}/$(dirname ${DEF_FILE})"
     - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
         cd ${FINAL_DIR}/$(dirname ${DEF_FILE}) &&
