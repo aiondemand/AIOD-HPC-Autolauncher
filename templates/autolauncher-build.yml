@@ -66,6 +66,7 @@ build_image_mn5:
     - export REMOTE_DEF_PATH="${DEF_FILE}"
     - export FINAL_IMAGE_PATH="${FINAL_DIR}/${SHORT_SHA}.sif"
     - export REMOTE_OUTPUT_PATH="${OUTPUT_FOLDER}/${USERNAME}/${REPO_NAME}/${SHORT_SHA}"
+    - export REMOTE_CACHE_DIR="/tmp/${SHORT_SHA}"
     - echo "Image will be saved to $REMOTE_OUTPUT_PATH"
 
     # Set-up directories (cache, tmp and folder where the image will be created /mnt/diskS/<repo_name>/<commid_id>.sif)
@@ -82,7 +83,7 @@ build_image_mn5:
     - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
         cd ${FINAL_DIR}/\$(dirname ${DEF_FILE}) && \
-        sudo -E SINGULARITY_CACHEDIR='/tmp/singularity-cache' \
+        sudo -E SINGULARITY_CACHEDIR='${REMOTE_CACHE_DIR}' \
         singularity build ${FINAL_IMAGE_PATH} \$(basename ${DEF_FILE}) 2>&1 | tee build.log \
       "
 
@@ -102,9 +103,11 @@ build_image_mn5:
           sudo cp ${FINAL_DIR}/pip_freeze.txt ${REMOTE_OUTPUT_PATH}/ &&
           sudo cp ${FINAL_DIR}/${DEF_FILE} ${REMOTE_OUTPUT_PATH}/recipe.def &&
           sudo rm -rf ${FINAL_DIR}
+          sudo rm -rf ${REMOTE_CACHE_DIR}
         else
           echo '[ERROR]:   Singularity image was not built. It does not exists in the current filesystem: $FINAL_IMAGE_PATH' >&2
           sudo rm -rf ${FINAL_DIR}
+          sudo rm -rf ${REMOTE_CACHE_DIR}
           exit 1
         fi
       "
