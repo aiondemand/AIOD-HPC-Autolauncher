@@ -84,7 +84,7 @@ build_image_mn5:
     - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
         cd ${FINAL_DIR}/\$(dirname ${DEF_FILE}) && \
-        sudo singularity build ${FINAL_IMAGE_PATH} \$(basename ${DEF_FILE}) 2>&1 | tee build.log \
+        sudo singularity build ${FINAL_IMAGE_PATH} \$(basename ${DEF_FILE}) 2>&1 | tee ${FINAL_DIR}/build.log \
       "
 
     # Artifacts
