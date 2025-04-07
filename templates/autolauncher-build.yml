@@ -129,7 +129,7 @@ build_image_mn5:
         - autolauncher-output/
     expire_in: never # permanent
   rules:
-    - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5.*$/
+    - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5 <.+>$/
     - when: never
   tags:
     - estufa
