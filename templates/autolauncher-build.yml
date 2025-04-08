@@ -1,6 +1,10 @@
 variables:
-    DOCKERFILE_TAG: ""
     LAUNCH_IMAGE_NAME: ${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME}
+    LAUNCH_CONFIG_PATH: configs/config.json
+    OUTPUT_FOLDER: /gpfs/projects/bsc70/hpai/storage/data/images
+    EXEC_HOSTS_FILE: some_file
+    SINGULARITY_IMAGE: quay.io/singularity/singularity:v3.11.5-slim 
+    LAUNCH_VERSION: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}-${CI_COMMIT_REF_NAME} # qi
     TAGS: estufa # mininostrum, estufa or pepino
 
 build:
@@ -8,8 +12,8 @@ build:
   stage: build
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
-  script:
     - time apk add bash
+  script:
     - export LAUNCH_IMAGE_NAME=$(env LAUNCH_IMAGE_NAME=${LAUNCH_IMAGE_NAME} bash -c 'echo ${LAUNCH_IMAGE_NAME,,}')
     - >-
       echo -e "[global]\ntimeout = 60\nindex-url = https://pypi.org/simple\ntrusted-host = pypi.org\n               hpai.bsc.es\nextra-index-url = https://${pypi_user}:${pypi_pass}@hpai.bsc.es:11080/simple/\n" > pip.conf
@@ -29,3 +33,103 @@ build:
     - when: never
   tags: 
     - ${TAGS}
+
+
+build_image_mn5:
+  image:
+    name: ci.atalaya.at/containers/docker:stable
+  stage: build
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - apk add --update curl bash openssh rsync shadow && rm -rf /var/cache/apk/*
+    - export OPENSTACK_USER="ubuntu"
+    - export OPENSTACK_HOST="212.128.226.38"
+  script:
+    # Extract the .def file name from the commit title
+    - export DEF_FILE=$(echo "${CI_COMMIT_TITLE}" | sed -e 's/.*<\([^]]*\)>.*/\1/g')
+    - echo "The .def file is $DEF_FILE"
+
+    # Connect to OpenStack copy the ssh key from secrets, decode key and do the ssh connection
+    - mkdir -p ~/.ssh/ && chmod 0700 ~/.ssh
+    - echo ${OPENSTACK_KEY} | base64 -d > ~/.ssh/ssh-key
+    - chmod 0600 ~/.ssh/ssh-key
+    - ssh-keygen -f ~/.ssh/ssh-key -p
+    
+    # Set-up names
+    - export USERNAME="${CI_PROJECT_PATH%/*}"
+    - export SHORT_SHA="${CI_COMMIT_SHORT_SHA}"
+    - export REPO_NAME="${CI_PROJECT_PATH##*/}"
+    # - export FINAL_DIR="/mnt/diskS/autolauncher/${USERNAME}/${REPO_NAME}/${SHORT_SHA}"
+    - export FINAL_DIR="~/autolauncher/${USERNAME}/${REPO_NAME}/${SHORT_SHA}"
+    - export REMOTE_DEF_PATH="${DEF_FILE}"
+    - export FINAL_IMAGE_PATH="${FINAL_DIR}/${SHORT_SHA}.sif"
+    - export REMOTE_OUTPUT_PATH="${OUTPUT_FOLDER}/${USERNAME}/${REPO_NAME}/${SHORT_SHA}"
+    # - export REMOTE_CACHE_DIR="/tmp/${SHORT_SHA}"
+    - echo "Image will be saved to $REMOTE_OUTPUT_PATH"
+
+    # Set-up directories (image will be created ~/autolauncher/<repo_name>/<commit_id>.sif)
+    - |
+      ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
+        sudo mkdir -p ${FINAL_DIR} && \
+        sudo chown -R ${OPENSTACK_USER}:${OPENSTACK_USER} ${FINAL_DIR}
+      "
+
+    # Clone the whole repo (we must do this to support requirements.txt)
+    - rsync -az --delete ./ -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key" ./ ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/
+
+    # Build
+    - |
+      ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
+        cd ${FINAL_DIR}/\$(dirname ${DEF_FILE}) && \
+        sudo singularity build ${FINAL_IMAGE_PATH} \$(basename ${DEF_FILE}) 2>&1 | tee ${FINAL_DIR}/build.log \
+      "
+
+    # Artifacts
+    - ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "sudo singularity exec ${FINAL_IMAGE_PATH} pip3 freeze > ${FINAL_DIR}/pip_freeze.txt 2>&1 || echo '[ERROR]   pip3 executable file not found in PATH'"
+    - mkdir -p autolauncher-output/
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/build.log autolauncher-output/
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST}:${FINAL_DIR}/pip_freeze.txt autolauncher-output/
+
+    # Send image to GPFS
+    - |
+      ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${OPENSTACK_USER}@${OPENSTACK_HOST} "
+        if [ -f ${FINAL_IMAGE_PATH} ]; then
+          sudo mkdir -p ${REMOTE_OUTPUT_PATH} &&
+          sudo cp ${FINAL_IMAGE_PATH} ${REMOTE_OUTPUT_PATH}/ &&
+          sudo cp ${FINAL_DIR}/build.log ${REMOTE_OUTPUT_PATH}/ &&
+          sudo cp ${FINAL_DIR}/pip_freeze.txt ${REMOTE_OUTPUT_PATH}/ &&
+          sudo cp ${FINAL_DIR}/${DEF_FILE} ${REMOTE_OUTPUT_PATH}/recipe.def &&
+          sudo rm -rf ${FINAL_DIR}
+        else
+          echo '[ERROR]:   Singularity image was not built. It does not exists in the current filesystem: $FINAL_IMAGE_PATH' >&2
+          sudo rm -rf ${FINAL_DIR}
+          exit 1
+        fi
+      "
+
+    - |
+      echo " "
+      echo " "
+      echo "       Singularity image saved to GPFS: "
+      echo "       ${REMOTE_OUTPUT_PATH}/${SHORT_SHA}.sif "
+      echo " "
+      echo "       Python dependencies stored in: "
+      echo "       ${REMOTE_OUTPUT_PATH}/pip_freeze.txt "
+      echo " "
+      echo "       Definition file used for this build stored in: "
+      echo "       ${REMOTE_OUTPUT_PATH}/recipe.def"
+      echo " "
+      echo " "
+
+  artifacts:
+    paths:
+        - autolauncher-output/
+    expire_in: never # permanent
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^BUILD_IMAGE_MN5 <.+>.*$/
+    - when: never
+  tags:
+    - estufa
