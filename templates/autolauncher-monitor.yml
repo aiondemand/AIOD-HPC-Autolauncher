@@ -201,7 +201,7 @@ monitor_leonardo:
     - echo ${PARAPHRASE} | SSH_ASKPASS=/bin/cat setsid -w ssh-add ~/.ssh/leonardo-key
     - mv /tmp/autolauncher/utilities/known_hosts ~/.ssh/known_hosts
     - scp -i ~/.ssh/leonardo-key -o StrictHostKeyChecking=no /tmp/autolauncher/utilities/monitor.sh ${LEONARDO_USER}@login.leonardo.cineca.it:${JOB_WORKDIR}/monitor.sh
-    - ssh -i ~/.ssh/leonardo-key -o StrictHostKeyChecking=no -o ServerAliveInterval=60 ${LEONARDO_USER}@login.leonardo.cineca.it env JOB_PID=$JOB_PID OUT_FILE=${JOB_WORKDIR}/slurm_output/out.txt bash ${JOB_WORKDIR}/monitor.sh
+    - ssh -i ~/.ssh/leonardo-key -o StrictHostKeyChecking=no -o ServerAliveInterval=60 ${LEONARDO_USER}@login.leonardo.cineca.it env JOB_PID=$JOB_PID OUT_FILE=${JOB_WORKDIR}/slurm_output/out.txt bash ${JOB_WORKDIR}/monitor.sh ${LEONARDO_USER}
     - scp -r -i ~/.ssh/leonardo-key -o StrictHostKeyChecking=no ${LEONARDO_USER}@login.leonardo.cineca.it:${JOB_WORKDIR}/slurm_output .
     - cat slurm_output/out.txt
   artifacts:
